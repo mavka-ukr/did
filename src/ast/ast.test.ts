@@ -6,6 +6,7 @@ import {CustomError, ParseError} from "../util_parsers/types";
 import LogicalNode from "./LogicalNode";
 import EmptyNode from "./EmptyNode";
 import TextNode from "./TextNode";
+import ObjectEntryNode from "./ObjectEntryNode";
 
 describe("NumberNode", () => {
     test("parsed from `123`", () => {
@@ -165,6 +166,52 @@ describe("TextNode", () => {
                 "text (ParseError(tag): Expected '\"' but got '\nc\"')",
                 '"ab\nc"',
                 new CustomError("TextNode")
+            ))
+        );
+    });
+});
+
+describe("ObjectEntryNode", () => {
+    test('parsed from `ключ="значення"`', () => {
+        const node = ObjectEntryNode.parse('ключ="значення"', new Context(0, 0));
+        expect(node).toStrictEqual(
+            new Ok(["", [new ObjectEntryNode(
+                "ключ",
+                new TextNode("значення", new Context(0, 5)),
+                new Context(0, 0)
+            ), new Context(0, 15)]])
+        );
+    });
+
+    test("failed to parse from `abc`", () => {
+        const node = ObjectEntryNode.parse("abc", new Context(0, 0));
+        expect(node).toStrictEqual(
+            new Err(new ParseError(
+                "object entry (ParseError(tag): Expected '=' but got '')",
+                "abc",
+                new CustomError("ObjectEntryNode")
+            ))
+        );
+    });
+
+    test("failed to parse from `ключ=значення`", () => {
+        const node = ObjectEntryNode.parse("ключ=значення", new Context(0, 0));
+        expect(node).toStrictEqual(
+            new Err(new ParseError(
+                "object entry (ParseError(alt): Expected 'one of the provided parsers' but got 'значення')",
+                "ключ=значення",
+                new CustomError("ObjectEntryNode")
+            ))
+        );
+    });
+
+    test("failed to parse from ` ключ=значення`", () => {
+        const node = ObjectEntryNode.parse(" ключ=значення", new Context(0, 0));
+        expect(node).toStrictEqual(
+            new Err(new ParseError(
+                "object entry (ParseError(alt): Expected 'one of the provided parsers' but got ' ключ=значення')",
+                " ключ=значення",
+                new CustomError("ObjectEntryNode")
             ))
         );
     });

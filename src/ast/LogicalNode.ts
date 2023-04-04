@@ -15,7 +15,7 @@ export default class LogicalNode extends ASTNode {
             return new Err(new ParseError("boolean", input, new CustomError("LogicalNode")))
         }
         const [rest, n] = parseResult.unwrap();
-        return new Ok([rest, [new LogicalNode(n, context), context.add(input.length - rest.length, 0)]]);
+        return new Ok([rest, [new LogicalNode(n, context), context.addColumns(input.length - rest.length)]]);
     }
 
     toString(): string {

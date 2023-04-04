@@ -15,7 +15,7 @@ export default class NumberNode extends ASTNode {
             return new Err(new ParseError("number", input, new CustomError("NumberNode")))
         }
         const [rest, n] = parseResult.unwrap();
-        return new Ok([rest, [new NumberNode(n, context), context.add(input.length - rest.length, 0)]]);
+        return new Ok([rest, [new NumberNode(n, context), context.addColumns(input.length - rest.length)]]);
     }
 
     toString(): string {

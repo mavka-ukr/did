@@ -72,7 +72,7 @@ export function alt<T>(...parsers: Parser<T>[]): Parser<T> {
             }
         }
 
-        return new Err(new ParseError("one of the provided util_parsers", input, "alt"));
+        return new Err(new ParseError("one of the provided parsers", input, "alt"));
     };
 }
 

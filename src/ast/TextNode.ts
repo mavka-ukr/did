@@ -19,7 +19,7 @@ export default class TextNode extends ASTNode {
             ));
         }
         const [rest, n] = parseResult.unwrap();
-        return new Ok([rest, [new TextNode(n, context), context.add(input.length - rest.length, 0)]]);
+        return new Ok([rest, [new TextNode(n, context), context.addColumns(input.length - rest.length)]]);
     }
 
     toString(): string {

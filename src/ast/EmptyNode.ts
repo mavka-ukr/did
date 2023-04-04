@@ -13,8 +13,8 @@ export default class EmptyNode extends ASTNode {
         if (parseResult.isErr()) {
             return new Err(new ParseError("пусто", input, new CustomError("EmptyNode")))
         }
-        const [rest, _] = parseResult.unwrap();
-        return new Ok([rest, [new EmptyNode(context), context.add(5, 0)]]);
+        const [rest,] = parseResult.unwrap();
+        return new Ok([rest, [new EmptyNode(context), context.addColumns(5)]]);
     }
 
     toString(): string {
