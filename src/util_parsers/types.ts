@@ -14,9 +14,23 @@ export type IResult<T> = Result<[string, T], ParseError>;
 export type Parser<T> = (input: string) => IResult<T>;
 
 export type ErrorKind =
-    "tag" | "eof" | "alpha" | "numeric" | "alphaNumeric" | "alpha1" | "numeric1" | "alphaNumeric1" | "one of" | "none of"
-    | "whitespace1" | "alt" | "line ending"
-    | "many0" | "many1" | "separated list" | "escaped"
+    "tag"
+    | "eof"
+    | "alpha"
+    | "numeric"
+    | "alphaNumeric"
+    | "alpha1"
+    | "numeric1"
+    | "alphaNumeric1"
+    | "one of"
+    | "none of"
+    | "whitespace1"
+    | "alt"
+    | "line ending"
+    | "many0"
+    | "many1"
+    | "separated list"
+    | "escaped"
     | CustomError;
 
 export class CustomError {
@@ -24,7 +38,7 @@ export class CustomError {
     }
 
     toString(): string {
-        return this.msg
+        return this.msg;
     }
 }
 
@@ -37,7 +51,9 @@ export class ParseError {
     }
 
     toString(): string {
-        const kind = this.kind ? `(${this.kind})` : "";
+        const kind = this.kind
+            ? `(${this.kind})`
+            : "";
         return `ParseError${kind}: Expected '${this.expected}' but got '${this.input}'`;
     }
 }

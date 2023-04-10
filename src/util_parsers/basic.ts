@@ -33,8 +33,9 @@ export function tag(value: string): Parser<string> {
  */
 export function whitespace0(input: string): IResult<string> {
     // `^` asserts position at start of the string
-    //  `\s` matches any whitespace character (equivalent to [\r\n\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff])
-    //  `*` matches the previous token between zero and unlimited times, as many times as possible, giving back as needed (greedy)
+    //  `\s` matches any whitespace character (equivalent to [\r\n\t\f\v
+    // \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]) `*` matches the previous token between zero and
+    // unlimited times, as many times as possible, giving back as needed (greedy)
     const match = input.match(/^\s*/)!;
 
     return new Ok([input.slice(match[0].length), match[0]]);
@@ -48,8 +49,9 @@ export function whitespace0(input: string): IResult<string> {
  */
 export function whitespace1(input: string): IResult<string> {
     // `^` asserts position at start of the string
-    //  `\s` matches any whitespace character (equivalent to [\r\n\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff])
-    //  `+` matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+    //  `\s` matches any whitespace character (equivalent to [\r\n\t\f\v
+    // \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]) `+` matches the previous token between one and
+    // unlimited times, as many times as possible, giving back as needed (greedy)
     const match = input.match(/^\s+/);
     if (match) {
         return new Ok([input.slice(match[0].length), match[0]]);
@@ -68,7 +70,7 @@ export function lineEnding(input: string): IResult<string> {
     if (match) {
         return new Ok([input.slice(match[0].length), match[0]]);
     }
-    return new Err(new ParseError("line ending", input, "line ending"))
+    return new Err(new ParseError("line ending", input, "line ending"));
 }
 
 /**
@@ -79,9 +81,9 @@ export function lineEnding(input: string): IResult<string> {
  */
 export function eof(input: string): IResult<null> {
     if (input.length === 0) {
-        return new Ok([input, null])
+        return new Ok([input, null]);
     }
-    return new Err(new ParseError("EOF", input, "eof"))
+    return new Err(new ParseError("EOF", input, "eof"));
 }
 
 /**
@@ -95,7 +97,7 @@ export function alpha(input: string): IResult<string> {
     if (match) {
         return new Ok([input.slice(1), match[0]]);
     }
-    return new Err(new ParseError("alpha", input, "alpha"))
+    return new Err(new ParseError("alpha", input, "alpha"));
 }
 
 /**
@@ -109,7 +111,7 @@ export function numeric(input: string): IResult<string> {
     if (match) {
         return new Ok([input.slice(1), match[0]]);
     }
-    return new Err(new ParseError("numeric", input, "numeric"))
+    return new Err(new ParseError("numeric", input, "numeric"));
 }
 
 /**
@@ -123,7 +125,7 @@ export function alphaNumeric(input: string): IResult<string> {
     if (match) {
         return new Ok([input.slice(1), match[0]]);
     }
-    return new Err(new ParseError("alphaNumeric", input, "alphaNumeric"))
+    return new Err(new ParseError("alphaNumeric", input, "alphaNumeric"));
 }
 
 /**
@@ -170,7 +172,7 @@ export function alpha1(input: string): IResult<string> {
     if (match) {
         return new Ok([input.slice(match[0].length), match[0]]);
     }
-    return new Err(new ParseError("alpha", input, "alpha1"))
+    return new Err(new ParseError("alpha", input, "alpha1"));
 }
 
 /**
@@ -184,7 +186,7 @@ export function numeric1(input: string): IResult<string> {
     if (match) {
         return new Ok([input.slice(match[0].length), match[0]]);
     }
-    return new Err(new ParseError("numeric", input, "numeric1"))
+    return new Err(new ParseError("numeric", input, "numeric1"));
 }
 
 /**
@@ -198,7 +200,7 @@ export function alphaNumeric1(input: string): IResult<string> {
     if (match) {
         return new Ok([input.slice(match[0].length), match[0]]);
     }
-    return new Err(new ParseError("alphaNumeric", input, "alphaNumeric1"))
+    return new Err(new ParseError("alphaNumeric", input, "alphaNumeric1"));
 }
 
 /**
@@ -214,7 +216,7 @@ export function oneOf(chars: string): Parser<string> {
         if (match) {
             return new Ok([input.slice(match[0].length), match[0]]);
         }
-        return new Err(new ParseError(`one of chars in "${chars}"`, input, "one of"))
+        return new Err(new ParseError(`one of chars in "${chars}"`, input, "one of"));
     };
 }
 
@@ -231,6 +233,6 @@ export function noneOf(chars: string): Parser<string> {
         if (match) {
             return new Ok([input.slice(match[0].length), match[0]]);
         }
-        return new Err(new ParseError(`none of chars in "${chars}"`, input, "none of"))
+        return new Err(new ParseError(`none of chars in "${chars}"`, input, "none of"));
     };
 }

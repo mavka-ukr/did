@@ -48,16 +48,26 @@ export function pair<T, U>(first: Parser<T>, second: Parser<U>): Parser<[T, U]> 
  */
 export function tuple<T extends any[]>(...parsers: { [K in keyof T]: Parser<T[K]> }): Parser<T> {
     return (input: string) => {
-        let result: IResult<any> = new Ok([input, []]);
+        let result: IResult<any> = new Ok([input, Array(parsers.length)]);
+        let index = 0;
+
         for (const parser of parsers) {
-            result = result.flatMap(([rest, results]) => {
-                return parser(rest).map(([rest, result]) => [rest, [...results, result]]);
-            });
+            result = result.flatMap(
+                ([rest, results]) =>
+                    parser(rest).map(
+                        ([rest, result]) => {
+                            results[index] = result;
+                            index++;
+                            return [rest, results];
+                        },
+                    ),
+            );
         }
 
         return result as IResult<T>;
     };
 }
+
 
 /**
  * A combinator that tries to apply a parser from the provided list

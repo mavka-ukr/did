@@ -1,8 +1,9 @@
-import ASTNode, {Context} from "./ASTNode";
+import ASTNode from "./ASTNode";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {recognize, pair, opt, alt, tuple, map} from "../util_parsers/combinator";
 import {numeric1, tag} from "../util_parsers/basic";
 import {Err, Ok} from "../result";
+import Context from "./Context";
 
 export default class NumberNode extends ASTNode {
     constructor(public readonly number: number, context: Context) {
@@ -12,7 +13,7 @@ export default class NumberNode extends ASTNode {
     static parse(input: string, context: Context): IResult<[NumberNode, Context]> {
         const parseResult = parseNumber(input);
         if (parseResult.isErr()) {
-            return new Err(new ParseError("number", input, new CustomError("NumberNode")))
+            return new Err(new ParseError("number", input, new CustomError("NumberNode")));
         }
         const [rest, n] = parseResult.unwrap();
         return new Ok([rest, [new NumberNode(n, context), context.addColumns(input.length - rest.length)]]);
@@ -29,9 +30,11 @@ function parseNumber(input: string): IResult<number> {
             opt(tag("-")),
             alt(
                 map(recognize(tuple(numeric1, tag("."), numeric1)), Number.parseFloat),
-                map(recognize(numeric1), Number.parseInt)
-            )
+                map(recognize(numeric1), Number.parseInt),
+            ),
         ),
-        ([sign, n]) => sign ? -n : n
+        ([sign, n]) => sign
+            ? -n
+            : n,
     )(input);
 }

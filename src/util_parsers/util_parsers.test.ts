@@ -9,10 +9,10 @@ import {
     numeric, numeric0, numeric1, oneOf,
     tag,
     whitespace0,
-    whitespace1
+    whitespace1,
 } from "./basic";
 import {
-    alt, escaped,
+    alt,
     many0,
     many1,
     map, opt,
@@ -22,12 +22,12 @@ import {
     separatedList1,
     terminated,
     tuple,
-    value
+    value,
 } from "./combinator";
 import {describe, expect, test} from "@jest/globals";
 import {ParseError} from "./types";
 
-describe("Basic util_parsers", () => {
+describe("Basic parsers", () => {
     test("`tag` parses a string, that starts with the given value", () => {
         const parser = tag("foo");
         const result = parser("foobar");
@@ -313,7 +313,7 @@ describe("Combinators", () => {
     test("`alt` returns a parser that fails, if both util_parsers fail", () => {
         const parser = alt(tag("foo"), tag("bar"));
         const result = parser("baz");
-        expect(result).toStrictEqual(new Err(new ParseError("one of the provided util_parsers", "baz", "alt")));
+        expect(result).toStrictEqual(new Err(new ParseError("one of the provided parsers", "baz", "alt")));
     });
 
     test("`terminated` returns a parser that returns the result of the first parser, if it succeeds", () => {
@@ -380,7 +380,7 @@ describe("Combinators", () => {
         const parser = many1(tag("foo"));
         const result = parser("bar");
         expect(result).toStrictEqual(
-            new Err(new ParseError("at least one successful parse", "bar", "many1"))
+            new Err(new ParseError("at least one successful parse", "bar", "many1")),
         );
     });
 
@@ -390,17 +390,23 @@ describe("Combinators", () => {
         expect(result).toStrictEqual(new Err(new ParseError("parser that consumes input", "foo", "many1")));
     });
 
-    test("`peek` returns a parser that returns the result of the provided parser and the original input, if it succeeds", () => {
-        const parser = peek(tag("foo"));
-        const result = parser("foobar");
-        expect(result).toStrictEqual(new Ok(["foobar", "foo"]));
-    });
+    test(
+        "`peek` returns a parser that returns the result of the provided parser and the original input, if it succeeds",
+        () => {
+            const parser = peek(tag("foo"));
+            const result = parser("foobar");
+            expect(result).toStrictEqual(new Ok(["foobar", "foo"]));
+        },
+    );
 
-    test("`separatedList0` returns a parser that returns an array of the results of the second parser, if the parser chain succeeds", () => {
-        const parser = separatedList0(tag(","), tag("foo"));
-        const result = parser("foo,foo,foo");
-        expect(result).toStrictEqual(new Ok(["", ["foo", "foo", "foo"]]));
-    });
+    test(
+        "`separatedList0` returns a parser that returns an array of the results of the second parser, if the parser chain succeeds",
+        () => {
+            const parser = separatedList0(tag(","), tag("foo"));
+            const result = parser("foo,foo,foo");
+            expect(result).toStrictEqual(new Ok(["", ["foo", "foo", "foo"]]));
+        },
+    );
 
     test("`separatedList0` returns a parser that returns an empty array, if the first parser fails", () => {
         const parser = separatedList0(tag(","), tag("foo"));
@@ -412,21 +418,24 @@ describe("Combinators", () => {
         const parser = separatedList0(peek(tag(",")), tag("foo"));
         const result = parser("foo,foo");
         expect(result).toStrictEqual(
-            new Err(new ParseError("parser that consumes input", "foo,foo", "separated list"))
+            new Err(new ParseError("parser that consumes input", "foo,foo", "separated list")),
         );
     });
 
-    test("`separatedList1` returns a parser that returns an array of the results of the second parser, if the parser chain succeeds", () => {
-        const parser = separatedList1(tag(","), tag("foo"));
-        const result = parser("foo,foo,foo");
-        expect(result).toStrictEqual(new Ok(["", ["foo", "foo", "foo"]]));
-    });
+    test(
+        "`separatedList1` returns a parser that returns an array of the results of the second parser, if the parser chain succeeds",
+        () => {
+            const parser = separatedList1(tag(","), tag("foo"));
+            const result = parser("foo,foo,foo");
+            expect(result).toStrictEqual(new Ok(["", ["foo", "foo", "foo"]]));
+        },
+    );
 
     test("`separatedList1` fails if the first parse fails", () => {
         const parser = separatedList1(tag(","), tag("foo"));
         const result = parser("bar");
         expect(result).toStrictEqual(
-            new Err(new ParseError("at least one successful parse", "bar", "separated list"))
+            new Err(new ParseError("at least one successful parse", "bar", "separated list")),
         );
     });
 
@@ -434,7 +443,7 @@ describe("Combinators", () => {
         const parser = separatedList1(peek(tag(",")), tag("foo"));
         const result = parser("foo,foo");
         expect(result).toStrictEqual(
-            new Err(new ParseError("parser that consumes input", "foo,foo", "separated list"))
+            new Err(new ParseError("parser that consumes input", "foo,foo", "separated list")),
         );
     });
 
@@ -460,34 +469,5 @@ describe("Combinators", () => {
         const parser = opt(tag("foo"));
         const result = parser("bar");
         expect(result).toStrictEqual(new Ok(["bar", null]));
-    });
-
-    test("`escaped` returns a parser that succeeds, if the input value is valid", () => {
-        const parser = escaped(many0(noneOf('"\\\n\r')), "\\", oneOf('"\\nrt'));
-
-        let result = parser('foo');
-        expect(result).toStrictEqual(new Ok(["", "foo"]));
-
-        result = parser('foo\\n');
-        expect(result).toStrictEqual(new Ok(["", "foo\\n"]));
-
-        result = parser('foo\\r');
-        expect(result).toStrictEqual(new Ok(["", "foo\\r"]));
-
-        result = parser('foo\\t');
-        expect(result).toStrictEqual(new Ok(["", "foo\\t"]));
-
-        result = parser('foo\\\\');
-        expect(result).toStrictEqual(new Ok(["", "foo\\\\"]));
-    });
-
-    test("`escaped` returns a parser that fails, if the input value is invalid", () => {
-        const parser = escaped(many0(noneOf('"\\\n\r')), "\\", oneOf('"\\nrt'));
-
-        let result = parser('foo\\');
-        expect(result).toStrictEqual(new Err(new ParseError("one of \"\\nrt", "foo\\")));
-
-        result = parser('foo\\x');
-        expect(result).toStrictEqual(new Err(new ParseError("one of \"\\nrt", "foo\\x")));
     });
 });

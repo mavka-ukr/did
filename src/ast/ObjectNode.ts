@@ -1,15 +1,17 @@
-import ASTNode, {Context} from "./ASTNode";
+import ASTNode from "./ASTNode";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {Err, Ok} from "../result";
 import {pair} from "../util_parsers/combinator";
-import ObjectEntryNode, {parseIdent, whitespaceOffset} from "./ObjectEntryNode";
+import {listOfEntries} from "./composite_parsers";
+import Context, {whitespaceOffset} from "./Context";
+import ObjectEntryNode, {parseIdent} from "./ObjectEntryNode";
 import {tag} from "../util_parsers/basic";
 
 export default class ObjectNode extends ASTNode {
     constructor(
         public readonly ident: string,
-        public readonly entries: ASTNode[],
-        context: Context
+        public readonly entries: ObjectEntryNode[],
+        context: Context,
     ) {
         super(context);
     }
@@ -20,7 +22,7 @@ export default class ObjectNode extends ASTNode {
             return new Err(new ParseError(
                 `object (${parseResult.unwrapErr()})`,
                 input,
-                new CustomError("ObjectNode")
+                new CustomError("ObjectNode"),
             ));
         }
         const [rest, [ident, entries, newContext]] = parseResult.unwrap();
@@ -28,7 +30,7 @@ export default class ObjectNode extends ASTNode {
     }
 
     toString(): string {
-        return `ObjectNode("${this.ident}", [${this.entries.map(e => e.toString()).join(', ')}])`;
+        return `ObjectNode("${this.ident}", [${this.entries.map(e => e.toString()).join(", ")}])`;
     }
 }
 
@@ -39,48 +41,28 @@ function parseObject(input: string, context: Context): IResult<[string, ObjectEn
     }
     const [rest, ident] = identResult.unwrap();
     const newContext = context.addColumns(input.length - rest.length);
-    const openParenResult = pair(tag('('), whitespaceOffset)(rest);
+    const openParenResult = pair(tag("("), whitespaceOffset)(rest);
     if (openParenResult.isErr()) {
         return new Err(openParenResult.unwrapErr());
     }
     const [rest2, [, offset]] = openParenResult.unwrap();
-    const newContext2 = newContext.addRows(offset.rows).addColumns(offset.columns);
+    const newContext2 = newContext.addColumns(1).addRows(offset.rows).addColumns(offset.columns);
 
-    const listOfEntriesResult = listOfEntries(rest2, newContext2);
+    const listOfEntriesResult = listOfObjectEntryNodeEntries(rest2, newContext2);
     if (listOfEntriesResult.isErr()) {
         return new Err(listOfEntriesResult.unwrapErr());
     }
     const [rest3, [entries, newContext3]] = listOfEntriesResult.unwrap();
-    const closeParenResult = pair(tag(')'), whitespaceOffset)(rest3);
+    const closeParenResult = pair(whitespaceOffset, tag(")"))(rest3);
     if (closeParenResult.isErr()) {
         return new Err(closeParenResult.unwrapErr());
     }
-    const [rest4, [, offset2]] = closeParenResult.unwrap();
-    const newContext4 = newContext3.addRows(offset2.rows).addColumns(offset2.columns);
+    const [rest4, [offset2]] = closeParenResult.unwrap();
+    const newContext4 = newContext3.addRows(offset2.rows).addColumns(offset2.columns + 1);
 
     return new Ok([rest4, [ident, entries, newContext4]]);
 }
 
-function listOfEntries(input: string, context: Context): IResult<[ObjectEntryNode[], Context]> {
-    const entries: ObjectEntryNode[] = [];
-    let rest = input;
-    let newContext = context;
-    while (true) {
-        const entryResult = ObjectEntryNode.parse(rest, newContext);
-        if (entryResult.isErr()) {
-            return new Err(entryResult.unwrapErr())
-        }
-        const [rest2, [entry, newContext1]] = entryResult.unwrap();
-        entries.push(entry);
-        rest = rest2;
-        newContext = newContext1;
-        const sepResult = pair(tag(','), whitespaceOffset)(rest);
-        if (sepResult.isErr()) {
-            break;
-        }
-        const [rest3, [, offset]] = sepResult.unwrap();
-        rest = rest3;
-        newContext = newContext.addRows(offset.rows).addColumns(offset.columns);
-    }
-    return new Ok([rest, [entries, newContext]]);
+function listOfObjectEntryNodeEntries(input: string, context: Context): IResult<[ObjectEntryNode[], Context]> {
+    return listOfEntries(input, context, ObjectEntryNode.parse);
 }

@@ -1,13 +1,10 @@
-import ASTNode, {Context} from "./ASTNode";
+import ASTNode from "./ASTNode";
 import {Err, Ok} from "../result";
-import {CustomError, IResult, ParseError, Parser} from "../util_parsers/types";
+import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {alt, many0, map, recognize, tuple} from "../util_parsers/combinator";
-import {alpha, alphaNumeric, tag, whitespace0} from "../util_parsers/basic";
-import NumberNode from "./NumberNode";
-import LogicalNode from "./LogicalNode";
-import EmptyNode from "./EmptyNode";
-import TextNode from "./TextNode";
-import ObjectNode from "./ObjectNode";
+import {alpha, alphaNumeric, tag} from "../util_parsers/basic";
+import {parseASTNode} from "./composite_parsers";
+import Context, {whitespaceOffset} from "./Context";
 
 export default class ObjectEntryNode extends ASTNode {
     constructor(public readonly key: string, public readonly value: ASTNode, context: Context) {
@@ -20,7 +17,7 @@ export default class ObjectEntryNode extends ASTNode {
             return new Err(new ParseError(
                 `object entry (${parseResult.unwrapErr()})`,
                 input,
-                new CustomError("ObjectEntryNode")
+                new CustomError("ObjectEntryNode"),
             ));
         }
         const [rest, [key, [value, newContext]]] = parseResult.unwrap();
@@ -28,8 +25,8 @@ export default class ObjectEntryNode extends ASTNode {
             rest,
             [
                 new ObjectEntryNode(key, value, context),
-                newContext
-            ]
+                newContext,
+            ],
         ]);
     }
 
@@ -40,28 +37,19 @@ export default class ObjectEntryNode extends ASTNode {
 
 export function parseIdent(input: string): IResult<string> {
     return recognize(tuple(
-        alt(tag('_'), alpha), // first char must be alpha or underscore
+        alt(tag("_"), alpha), // first char must be alpha or underscore
         alphaNumericOrUnderscore0, // rest of chars must be alphanumeric or underscore
-        many0(tuple(tag('\''), alpha, alphaNumericOrUnderscore0)) // optional apostrophes
+        many0(tuple(tag("'"), alpha, alphaNumericOrUnderscore0)), // optional apostrophes
     ))(input);
 }
 
 function alphaNumericOrUnderscore0(input: string): IResult<string[]> {
-    return many0(alt(alphaNumeric, tag('_')))(input);
-}
-
-type Offset = { columns: number, rows: number };
-
-export function whitespaceOffset(input: string): IResult<Offset> {
-    return map(whitespace0, ws => {
-        const split = ws.split(/\n|(\r\n)/);
-        return {rows: split.length - 1, columns: split[split.length - 1].length};
-    })(input);
+    return many0(alt(alphaNumeric, tag("_")))(input);
 }
 
 function parseObjectEntry(input: string, context: Context): IResult<[string, [ASTNode, Context]]> {
     const keyAndEq = tuple(
-        parseIdent, whitespaceOffset, tag('='), whitespaceOffset,
+        parseIdent, whitespaceOffset, tag("="), whitespaceOffset,
     )(input);
     if (keyAndEq.isErr()) {
         return new Err(keyAndEq.unwrapErr());
@@ -74,14 +62,7 @@ function parseObjectEntry(input: string, context: Context): IResult<[string, [AS
         .addRows(ws2.rows)
         .addColumns(ws2.columns);
     return map(
-        alt(
-            (i => NumberNode.parse(i, newContext)) as Parser<[ASTNode, Context]>,
-            (i => LogicalNode.parse(i, newContext)) as Parser<[ASTNode, Context]>,
-            (i => EmptyNode.parse(i, newContext)) as Parser<[ASTNode, Context]>,
-            (i => TextNode.parse(i, newContext)) as Parser<[ASTNode, Context]>,
-            (i => ObjectNode.parse(i, newContext)) as Parser<[ASTNode, Context]>,
-            // TODO: add array parser
-        ),
-        (value) => [key, value] as [string, [ASTNode, Context]]
+        i => parseASTNode(i, newContext),
+        (value) => [key, value] as [string, [ASTNode, Context]],
     )(rest);
 }

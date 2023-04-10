@@ -1,8 +1,9 @@
-import ASTNode, {Context} from "./ASTNode";
+import ASTNode from "./ASTNode";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {Err, Ok} from "../result";
 import {noneOf, oneOf, tag} from "../util_parsers/basic";
 import {alt, delimited, many0, map, preceded, value} from "../util_parsers/combinator";
+import Context from "./Context";
 
 export default class TextNode extends ASTNode {
     constructor(public readonly text: string, context: Context) {
@@ -15,7 +16,7 @@ export default class TextNode extends ASTNode {
             return new Err(new ParseError(
                 `text (${parseResult.unwrapErr().toString()})`,
                 input,
-                new CustomError("TextNode")
+                new CustomError("TextNode"),
             ));
         }
         const [rest, n] = parseResult.unwrap();
@@ -27,24 +28,24 @@ export default class TextNode extends ASTNode {
     }
 }
 
-const escapedLineFeed = preceded(tag('\\'), tag('n'));
-const escapedCarriageReturn = preceded(tag('\\'), tag('r'));
-const allowedChars = noneOf('"\\n\\r\\\\');
-const escapedChar = preceded(tag('\\'), oneOf('"t\\\\'));
+const escapedLineFeed = preceded(tag("\\"), tag("n"));
+const escapedCarriageReturn = preceded(tag("\\"), tag("r"));
+const allowedChars = noneOf("\"\\n\\r\\\\");
+const escapedChar = preceded(tag("\\"), oneOf("\"t\\\\"));
 const stringWithoutQuotes = many0(alt(
-    value(escapedLineFeed, '\n'),
-    value(escapedCarriageReturn, '\r'),
+    value(escapedLineFeed, "\n"),
+    value(escapedCarriageReturn, "\r"),
     map(escapedChar, char =>
         ({
-            '"': '"',
-            't': '\t',
-            '\\': '\\',
-        })[char]
+            "\"": "\"",
+            "t": "\t",
+            "\\": "\\",
+        })[char],
     ),
-    allowedChars
+    allowedChars,
 ));
 
 const stringLiteral = map(
-    delimited(tag('"'), stringWithoutQuotes, tag('"')),
-    (chars) => chars.join('')
+    delimited(tag("\""), stringWithoutQuotes, tag("\"")),
+    (chars) => chars.join(""),
 );
