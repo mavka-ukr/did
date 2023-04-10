@@ -1,18 +1,25 @@
 import {parseASTNode} from "./ast/composite_parsers";
-import Context from "./ast/Context";
+import Context, {whitespaceOffset} from "./ast/Context";
 
 /**
  * @param {string} code
  * @return {ASTNode}
+ * @throws {Error} if the code is invalid
  */
 export function parse(code: string) {
-    const parseResult = parseASTNode(code, new Context(0, 0));
+    const startResult = whitespaceOffset(code);
+    if (startResult.isErr()) {
+        throw new Error(startResult.unwrapErr().toString());
+    }
+    const [rest, offset] = startResult.unwrap();
+    const parseResult = parseASTNode(rest, new Context(offset.rows, offset.columns));
     if (parseResult.isErr()) {
         throw new Error(parseResult.unwrapErr().toString());
     }
-    const [rest, [node]] = parseResult.unwrap();
-    if (rest.length > 0) {
-        throw new Error(`Unexpected trailing characters: ${rest}`);
+    let [rest1, [node]] = parseResult.unwrap();
+    rest1 = rest1.trimEnd();
+    if (rest1.length > 0) {
+        throw new Error(`Unexpected trailing characters: ${rest1}`);
     }
     return node;
 }
