@@ -1,3 +1,4 @@
+import ASTNode from "./ast/ASTNode";
 import {parseASTNode} from "./ast/composite_parsers";
 import Context, {whitespaceOffset} from "./ast/Context";
 
@@ -6,7 +7,7 @@ import Context, {whitespaceOffset} from "./ast/Context";
  * @return {ASTNode}
  * @throws {Error} if the code is invalid
  */
-export function parse(code: string) {
+export function parse(code: string): ASTNode {
     const startResult = whitespaceOffset(code);
     if (startResult.isErr()) {
         throw new Error(startResult.unwrapErr().toString());
