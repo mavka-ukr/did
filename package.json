@@ -1,11 +1,12 @@
 {
   "name": "mavka-did",
-  "type": "module",
   "version": "0.0.1",
+  "type": "module",
   "description": "Did format parser.",
-  "main": "src/main.js",
+  "main": "dist/src/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepack": "tsc"
   },
   "repository": {
     "type": "git",
@@ -14,10 +15,17 @@
   "keywords": [
     "mavka"
   ],
-  "author": "kohutd",
+  "author": "Andrii Kurduiumov <kant2002@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mavka-ukr/did/issues"
   },
-  "homepage": "https://github.com/mavka-ukr/did#readme"
+  "homepage": "https://github.com/mavka-ukr/did#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.3"
+  }
 }
