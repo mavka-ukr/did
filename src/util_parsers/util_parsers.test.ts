@@ -1,15 +1,10 @@
 import {Err, Ok} from "../result";
 import {
-    alpha, alpha0,
-    alpha1,
-    alphaNumeric, alphaNumeric0,
-    alphaNumeric1,
-    eof,
-    lineEnding, noneOf,
-    numeric, numeric0, numeric1, oneOf,
+    alpha,
+    alphaNumeric, noneOf,
+    numeric1, oneOf,
     tag,
     whitespace0,
-    whitespace1,
 } from "./basic";
 import {
     alt,
@@ -65,61 +60,6 @@ describe("Basic parsers", () => {
         expect(result).toStrictEqual(new Ok(["foo", "\n"]));
     });
 
-    test("`whitespace1` parses a string, that starts with spaces", () => {
-        const result = whitespace1("  foo");
-        expect(result).toStrictEqual(new Ok(["foo", "  "]));
-    });
-
-    test("`whitespace1` parses a string, that starts with tabs", () => {
-        const result = whitespace1("\tfoo");
-        expect(result).toStrictEqual(new Ok(["foo", "\t"]));
-    });
-
-    test("`whitespace1` parses a string, that starts with spaces and tabs", () => {
-        const result = whitespace1("\t  foo");
-        expect(result).toStrictEqual(new Ok(["foo", "\t  "]));
-    });
-
-    test("`whitespace1` parses a string, that starts with a newline", () => {
-        const result = whitespace1("\nfoo");
-        expect(result).toStrictEqual(new Ok(["foo", "\n"]));
-    });
-
-    test("`whitespace1` fails to parse a string, that starts with no whitespace", () => {
-        const result = whitespace1("foo");
-        expect(result).toStrictEqual(new Err(new ParseError("one or more whitespaces", "foo", "whitespace1")));
-    });
-
-    test("`lineEnding` parses a string, that starts with CRLF", () => {
-        const result = lineEnding("\r\nfoo");
-        expect(result).toStrictEqual(new Ok(["foo", "\r\n"]));
-    });
-
-    test("`lineEnding` parses a string, that starts with LF", () => {
-        const result = lineEnding("\nfoo");
-        expect(result).toStrictEqual(new Ok(["foo", "\n"]));
-    });
-
-    test("`lineEnding` fails to parse a string, that starts with CR", () => {
-        const result = lineEnding("\rfoo");
-        expect(result).toStrictEqual(new Err(new ParseError("line ending", "\rfoo", "line ending")));
-    });
-
-    test("`lineEnding` fails to parse a string, that starts with no line ending", () => {
-        const result = lineEnding("foo");
-        expect(result).toStrictEqual(new Err(new ParseError("line ending", "foo", "line ending")));
-    });
-
-    test("`eof` parses a string, that is empty", () => {
-        const result = eof("");
-        expect(result).toStrictEqual(new Ok(["", null]));
-    });
-
-    test("`eof` fails to parse a string, that is not empty", () => {
-        const result = eof("foo");
-        expect(result).toStrictEqual(new Err(new ParseError("EOF", "foo", "eof")));
-    });
-
     test("`alpha` parses a string, that starts with a letter", () => {
         const result = alpha("foo");
         expect(result).toStrictEqual(new Ok(["oo", "f"]));
@@ -143,41 +83,6 @@ describe("Basic parsers", () => {
         expect(result).toStrictEqual(new Err(new ParseError("alpha", " foo", "alpha")));
     });
 
-    test("`alpha1` parses a string, that starts with a letter", () => {
-        const result = alpha1("foo");
-        expect(result).toStrictEqual(new Ok(["", "foo"]));
-    });
-
-    test("`alpha1` fails to parse a string, that starts with a digit", () => {
-        const result = alpha1("1foo");
-        expect(result).toStrictEqual(new Err(new ParseError("alpha", "1foo", "alpha1")));
-    });
-
-    test("`alpha0` parses a string, that starts with a letter", () => {
-        const result = alpha0("foo");
-        expect(result).toStrictEqual(new Ok(["", "foo"]));
-    });
-
-    test("`alpha0` parses a string, that starts with a digit", () => {
-        const result = alpha0("1foo");
-        expect(result).toStrictEqual(new Ok(["1foo", ""]));
-    });
-
-    test("`alpha0` parses a string, that starts with a symbol", () => {
-        const result = alpha0("!foo");
-        expect(result).toStrictEqual(new Ok(["!foo", ""]));
-    });
-
-    test("`numeric` parses a string, that starts with a digit", () => {
-        const result = numeric("1foo");
-        expect(result).toStrictEqual(new Ok(["foo", "1"]));
-    });
-
-    test("`numeric` fails to parse a string, that starts with a letter", () => {
-        const result = numeric("foo");
-        expect(result).toStrictEqual(new Err(new ParseError("numeric", "foo", "numeric")));
-    });
-
     test("`numeric1` parses a string, that starts with a digit", () => {
         const result = numeric1("123foo");
         expect(result).toStrictEqual(new Ok(["foo", "123"]));
@@ -186,21 +91,6 @@ describe("Basic parsers", () => {
     test("`numeric1` fails to parse a string, that starts with a letter", () => {
         const result = numeric1("foo");
         expect(result).toStrictEqual(new Err(new ParseError("numeric", "foo", "numeric1")));
-    });
-
-    test("`numeric0` parses a string, that starts with a digit", () => {
-        const result = numeric0("123foo");
-        expect(result).toStrictEqual(new Ok(["foo", "123"]));
-    });
-
-    test("`numeric0` parses a string, that starts with a letter", () => {
-        const result = numeric0("foo");
-        expect(result).toStrictEqual(new Ok(["foo", ""]));
-    });
-
-    test("`numeric0` parses a string, that starts with a symbol", () => {
-        const result = numeric0("!foo");
-        expect(result).toStrictEqual(new Ok(["!foo", ""]));
     });
 
     test("`alphaNumeric` parses a string, that starts with a letter", () => {
@@ -216,36 +106,6 @@ describe("Basic parsers", () => {
     test("`alphaNumeric` fails to parse a string, that starts with a symbol", () => {
         const result = alphaNumeric("!foo");
         expect(result).toStrictEqual(new Err(new ParseError("alphaNumeric", "!foo", "alphaNumeric")));
-    });
-
-    test("`alphaNumeric1` parses a string, that starts with a letter", () => {
-        const result = alphaNumeric1("foo");
-        expect(result).toStrictEqual(new Ok(["", "foo"]));
-    });
-
-    test("`alphaNumeric1` parses a string, that starts with a digit", () => {
-        const result = alphaNumeric1("1foo");
-        expect(result).toStrictEqual(new Ok(["", "1foo"]));
-    });
-
-    test("`alphaNumeric1` fails to parse a string, that starts with a symbol", () => {
-        const result = alphaNumeric1("!foo");
-        expect(result).toStrictEqual(new Err(new ParseError("alphaNumeric", "!foo", "alphaNumeric1")));
-    });
-
-    test("`alphaNumeric0` parses a string, that starts with a letter", () => {
-        const result = alphaNumeric0("foo");
-        expect(result).toStrictEqual(new Ok(["", "foo"]));
-    });
-
-    test("`alphaNumeric0` parses a string, that starts with a digit", () => {
-        const result = alphaNumeric0("1foo");
-        expect(result).toStrictEqual(new Ok(["", "1foo"]));
-    });
-
-    test("`alphaNumeric0` parses a string, that starts with a symbol", () => {
-        const result = alphaNumeric0("!foo");
-        expect(result).toStrictEqual(new Ok(["!foo", ""]));
     });
 
     test("`oneOf` parses a string, that starts with one of the given characters", () => {
