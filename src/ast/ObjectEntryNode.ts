@@ -55,7 +55,7 @@ type Offset = { columns: number, rows: number };
 export function whitespaceOffset(input: string): IResult<Offset> {
     return map(whitespace0, ws => {
         const split = ws.split(/\n|(\r\n)/);
-        return {columns: split.length - 1, rows: split[split.length - 1].length};
+        return {rows: split.length - 1, columns: split[split.length - 1].length};
     })(input);
 }
 
