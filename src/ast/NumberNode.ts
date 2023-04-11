@@ -13,7 +13,7 @@ export default class NumberNode extends ASTNode {
     static parse(input: string, context: Context): IResult<[NumberNode, Context]> {
         const parseResult = parseNumber(input);
         if (parseResult.isErr()) {
-            return new Err(new ParseError("number", input, new CustomError("NumberNode")));
+            return new Err(new ParseError("число", input, new CustomError("Розбір числового вузла")));
         }
         const [rest, n] = parseResult.unwrap();
         return new Ok([rest, [new NumberNode(n, context), context.addColumns(input.length - rest.length)]]);

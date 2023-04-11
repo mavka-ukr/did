@@ -1,7 +1,7 @@
 import {Err, Ok} from "../result";
 import {tag} from "../util_parsers/basic";
-import {alt, pair} from "../util_parsers/combinator";
-import {IResult, Parser} from "../util_parsers/types";
+import {alt, pair, withError} from "../util_parsers/combinator";
+import {CustomError, IResult, ParseError, Parser} from "../util_parsers/types";
 import ASTNode from "./ASTNode";
 import Context, {whitespaceOffset} from "./Context";
 import DictionaryNode from "./DictionaryNode";
@@ -13,14 +13,21 @@ import ObjectNode from "./ObjectNode";
 import TextNode from "./TextNode";
 
 export function parseASTNode(input: string, context: Context): IResult<[ASTNode, Context]> {
-    return alt(
-        (i => EmptyNode.parse(i, context)) as Parser<[ASTNode, Context]>,
-        (i => LogicalNode.parse(i, context)) as Parser<[ASTNode, Context]>,
-        (i => NumberNode.parse(i, context)) as Parser<[ASTNode, Context]>,
-        (i => TextNode.parse(i, context)) as Parser<[ASTNode, Context]>,
-        (i => ObjectNode.parse(i, context)) as Parser<[ASTNode, Context]>,
-        (i => DictionaryNode.parse(i, context)) as Parser<[ASTNode, Context]>,
-        (i => ListNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+    return withError(
+        alt(
+            (i => EmptyNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+            (i => LogicalNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+            (i => NumberNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+            (i => TextNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+            (i => ObjectNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+            (i => DictionaryNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+            (i => ListNode.parse(i, context)) as Parser<[ASTNode, Context]>,
+        ),
+        new ParseError(
+            'щось з переліку: "пусто", "так", "ні", число, текст, об\'єкт, словник або список',
+            input,
+            new CustomError("Розбір вузла синтаксичного дерева"),
+        ),
     )(input);
 }
 
@@ -38,7 +45,11 @@ export function listOfEntries<T extends ASTNode>(
             if (entries.length === 0) {
                 return new Ok([rest, [entries, newContext]]);
             }
-            return new Err(entryResult.unwrapErr());
+            return new Err(new ParseError(
+                `Розбір елементу переліку ${entryResult.unwrapErr()}`,
+                rest,
+                new CustomError("Розбір елементу переліку"),
+            ));
         }
         const [rest2, [entry, newContext1]] = entryResult.unwrap();
         entries.push(entry);

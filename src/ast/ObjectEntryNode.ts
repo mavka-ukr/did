@@ -1,7 +1,7 @@
 import ASTNode from "./ASTNode";
 import {Err, Ok} from "../result";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
-import {alt, many0, map, recognize, tuple} from "../util_parsers/combinator";
+import {alt, many0, map, recognize, tuple, withError} from "../util_parsers/combinator";
 import {alpha, alphaNumeric, tag} from "../util_parsers/basic";
 import {parseASTNode} from "./composite_parsers";
 import Context, {whitespaceOffset} from "./Context";
@@ -15,9 +15,9 @@ export default class ObjectEntryNode extends ASTNode {
         const parseResult = parseObjectEntry(input, context);
         if (parseResult.isErr()) {
             return new Err(new ParseError(
-                `object entry (${parseResult.unwrapErr()})`,
+                `входження об'єкту (${parseResult.unwrapErr()})`,
                 input,
-                new CustomError("ObjectEntryNode"),
+                new CustomError("Розбір входження об'єкту"),
             ));
         }
         const [rest, [key, [value, newContext]]] = parseResult.unwrap();
@@ -49,7 +49,16 @@ function alphaNumericOrUnderscore0(input: string): IResult<string[]> {
 
 function parseObjectEntry(input: string, context: Context): IResult<[string, [ASTNode, Context]]> {
     const keyAndEq = tuple(
-        parseIdent, whitespaceOffset, tag("="), whitespaceOffset,
+        i => withError(
+            parseIdent,
+            new ParseError("ключ входження об'єкту", i, new CustomError("Розбір ключа входження об'єкту")),
+        )(i),
+        whitespaceOffset,
+        i => withError(
+            tag("="),
+            new ParseError("=", i, new CustomError("Розбір '=' між ключем і значенням")),
+        )(i),
+        whitespaceOffset,
     )(input);
     if (keyAndEq.isErr()) {
         return new Err(keyAndEq.unwrapErr());

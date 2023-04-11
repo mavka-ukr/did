@@ -1,6 +1,6 @@
 import {Err, Ok} from "../result";
 import {tag} from "../util_parsers/basic";
-import {alt, map, tuple} from "../util_parsers/combinator";
+import {alt, map, tuple, withError} from "../util_parsers/combinator";
 import {CustomError, IResult, ParseError, Parser} from "../util_parsers/types";
 import ASTNode from "./ASTNode";
 import {parseASTNode} from "./composite_parsers";
@@ -22,9 +22,9 @@ export default class DictionaryEntryNode extends ASTNode {
         const parseResult = parseEntry(input, context);
         if (parseResult.isErr()) {
             return new Err(new ParseError(
-                `dict entry (${parseResult.unwrapErr()})`,
+                `запис словника (${parseResult.unwrapErr()})`,
                 input,
-                new CustomError("DictionaryEntryNode"),
+                new CustomError("Розбір запису словника"),
             ));
         }
         const [rest, [key, value, newContext]] = parseResult.unwrap();
@@ -37,20 +37,34 @@ export default class DictionaryEntryNode extends ASTNode {
 }
 
 function parseEntry(input: string, context: Context): IResult<[TextNode | NumberNode, ASTNode, Context]> {
-    const keyResult = alt(
-        map(
-            parseIdent,
-            ident => [new TextNode(ident, context), context.addColumns(ident.length)],
-        ) as Parser<[TextNode | NumberNode, Context]>,
-        (i => TextNode.parse(i, context)) as Parser<[TextNode | NumberNode, Context]>,
-        (i => NumberNode.parse(i, context)) as Parser<[TextNode | NumberNode, Context]>,
+    const keyResult = withError(
+        alt(
+            map(
+                parseIdent,
+                ident => [new TextNode(ident, context), context.addColumns(ident.length)],
+            ) as Parser<[TextNode | NumberNode, Context]>,
+            (i => TextNode.parse(i, context)) as Parser<[TextNode | NumberNode, Context]>,
+            (i => NumberNode.parse(i, context)) as Parser<[TextNode | NumberNode, Context]>,
+        ),
+        new ParseError(
+            "ключ запису словника: текст або число",
+            input,
+            new CustomError("Розбір ключа запису словника"),
+        ),
     )(input);
     if (keyResult.isErr()) {
         return new Err(keyResult.unwrapErr());
     }
     let [rest, [key, newContext]] = keyResult.unwrap();
 
-    const sepResult = tuple(whitespaceOffset, tag("="), whitespaceOffset)(rest);
+    const sepResult = withError(
+        tuple(whitespaceOffset, tag("="), whitespaceOffset),
+        new ParseError(
+            '=',
+            rest,
+            new CustomError("Розбір розділювача ('=') запису словника"),
+        ),
+    )(rest);
     if (sepResult.isErr()) {
         return new Err(sepResult.unwrapErr());
     }

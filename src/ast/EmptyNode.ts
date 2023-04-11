@@ -12,7 +12,7 @@ export default class EmptyNode extends ASTNode {
     static parse(input: string, context: Context): IResult<[EmptyNode, Context]> {
         const parseResult = tag("пусто")(input);
         if (parseResult.isErr()) {
-            return new Err(new ParseError("пусто", input, new CustomError("EmptyNode")));
+            return new Err(new ParseError("пусто", input, new CustomError("Розбір вузла 'пусто'")));
         }
         const [rest] = parseResult.unwrap();
         return new Ok([rest, [new EmptyNode(context), context.addColumns(5)]]);

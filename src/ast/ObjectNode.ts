@@ -1,7 +1,7 @@
 import ASTNode from "./ASTNode";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {Err, Ok} from "../result";
-import {pair} from "../util_parsers/combinator";
+import {pair, withError} from "../util_parsers/combinator";
 import {listOfEntries} from "./composite_parsers";
 import Context, {whitespaceOffset} from "./Context";
 import ObjectEntryNode, {parseIdent} from "./ObjectEntryNode";
@@ -20,9 +20,9 @@ export default class ObjectNode extends ASTNode {
         const parseResult = parseObject(input, context);
         if (parseResult.isErr()) {
             return new Err(new ParseError(
-                `object (${parseResult.unwrapErr()})`,
+                `об'єкт (${parseResult.unwrapErr()})`,
                 input,
-                new CustomError("ObjectNode"),
+                new CustomError("Розбір об'єкту"),
             ));
         }
         const [rest, [ident, entries, newContext]] = parseResult.unwrap();
@@ -35,13 +35,19 @@ export default class ObjectNode extends ASTNode {
 }
 
 function parseObject(input: string, context: Context): IResult<[string, ObjectEntryNode[], Context]> {
-    const identResult = parseIdent(input);
+    const identResult = withError(
+        parseIdent,
+        new ParseError("назва об'єкту", input, new CustomError("Розбір назви об'єкту")),
+    )(input);
     if (identResult.isErr()) {
         return new Err(identResult.unwrapErr());
     }
     const [rest, ident] = identResult.unwrap();
     const newContext = context.addColumns(input.length - rest.length);
-    const openParenResult = pair(tag("("), whitespaceOffset)(rest);
+    const openParenResult = withError(
+        pair(tag("("), whitespaceOffset),
+        new ParseError("(", rest, new CustomError("Розбір початку тіла об'єкту")),
+    )(rest);
     if (openParenResult.isErr()) {
         return new Err(openParenResult.unwrapErr());
     }
@@ -53,7 +59,10 @@ function parseObject(input: string, context: Context): IResult<[string, ObjectEn
         return new Err(listOfEntriesResult.unwrapErr());
     }
     const [rest3, [entries, newContext3]] = listOfEntriesResult.unwrap();
-    const closeParenResult = pair(whitespaceOffset, tag(")"))(rest3);
+    const closeParenResult = withError(
+        pair(whitespaceOffset, tag(")")),
+        new ParseError(")", rest3, new CustomError("Розбір кінця тіла об'єкту")),
+    )(rest3);
     if (closeParenResult.isErr()) {
         return new Err(closeParenResult.unwrapErr());
     }

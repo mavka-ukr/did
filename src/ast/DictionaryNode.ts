@@ -1,6 +1,6 @@
 import {Err, Ok} from "../result";
 import {tag} from "../util_parsers/basic";
-import {pair} from "../util_parsers/combinator";
+import {pair, withError} from "../util_parsers/combinator";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import ASTNode from "./ASTNode";
 import {listOfEntries} from "./composite_parsers";
@@ -27,7 +27,10 @@ export default class DictionaryNode extends ASTNode {
 }
 
 function parseDictionary(input: string, context: Context): IResult<[DictionaryEntryNode[], Context]> {
-    const startParser = pair(tag('('), whitespaceOffset)(input);
+    const startParser = withError(
+        pair(tag('('), whitespaceOffset),
+        new ParseError('(', input, new CustomError("Розбір початку словника")),
+    )(input);
     if (startParser.isErr()) {
         return new Err(startParser.unwrapErr());
     }
@@ -38,13 +41,16 @@ function parseDictionary(input: string, context: Context): IResult<[DictionaryEn
         return new Err(entriesParser.unwrapErr());
     }
     const [rest2, [entries, newContext2]] = entriesParser.unwrap();
-    const endParser = pair(whitespaceOffset, tag(')'))(rest2);
+    const endParser = withError(
+        pair(whitespaceOffset, tag(')')),
+        new ParseError(')', rest2, new CustomError("Розбір кінця словника")),
+    )(rest2);
     if (endParser.isErr()) {
         return new Err(endParser.unwrapErr());
     }
-    const [rest3, [offset2,]] = endParser.unwrap();
+    const [rest3, [offset2]] = endParser.unwrap();
     newContext = newContext2.addRows(offset2.rows).addColumns(offset2.columns + 1);
-    return new Ok([rest3, [entries, newContext]])
+    return new Ok([rest3, [entries, newContext]]);
 }
 
 function listOfDictionaryEntries(input: string, context: Context): IResult<[DictionaryEntryNode[], Context]> {

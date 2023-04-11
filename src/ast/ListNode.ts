@@ -1,7 +1,7 @@
 import ASTNode from "./ASTNode";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {Err, Ok} from "../result";
-import {pair} from "../util_parsers/combinator";
+import {pair, withError} from "../util_parsers/combinator";
 import {tag} from "../util_parsers/basic";
 import {listOfEntries, parseASTNode} from "./composite_parsers";
 import Context, {whitespaceOffset} from "./Context";
@@ -30,7 +30,10 @@ export default class ListNode extends ASTNode {
 }
 
 function parseList(input: string, context: Context): IResult<[ASTNode[], Context]> {
-    const parseResult = pair(tag("["), whitespaceOffset)(input);
+    const parseResult = withError(
+        pair(tag("["), whitespaceOffset),
+        new ParseError("[", input, new CustomError("Розбір початку списку")),
+    )(input);
     if (parseResult.isErr()) {
         return new Err(parseResult.unwrapErr());
     }
@@ -41,7 +44,10 @@ function parseList(input: string, context: Context): IResult<[ASTNode[], Context
         return new Err(entriesResult.unwrapErr());
     }
     const [rest2, [entries, newContext1]] = entriesResult.unwrap();
-    const endResult = pair(whitespaceOffset, tag("]"))(rest2);
+    const endResult = withError(
+        pair(whitespaceOffset, tag("]")),
+        new ParseError("]", rest2, new CustomError("Розбір кінця списку")),
+    )(rest2);
     if (endResult.isErr()) {
         return new Err(endResult.unwrapErr());
     }

@@ -13,7 +13,7 @@ export default class LogicalNode extends ASTNode {
     static parse(input: string, context: Context): IResult<[LogicalNode, Context]> {
         const parseResult = parseBool(input);
         if (parseResult.isErr()) {
-            return new Err(new ParseError("logical", input, new CustomError("LogicalNode")));
+            return new Err(new ParseError('"так" або "ні"', input, new CustomError("Розбір логічного вузла")));
         }
         const [rest, n] = parseResult.unwrap();
         return new Ok([rest, [new LogicalNode(n, context), context.addColumns(input.length - rest.length)]]);

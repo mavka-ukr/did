@@ -44,16 +44,16 @@ export class CustomError {
 
 export class ParseError {
     constructor(
-        public expected: string,
-        public input: string,
-        public kind?: ErrorKind,
+        public readonly expected: string,
+        public readonly input: string,
+        public readonly kind?: ErrorKind,
     ) {
     }
 
     toString(): string {
         const kind = this.kind
-            ? `(${this.kind})`
+            ? ` (${this.kind})`
             : "";
-        return `ParseError${kind}: Expected '${this.expected}' but got '${this.input}'`;
+        return `Помилка розбирача${kind}: Очікувалося '${this.expected}', але отримали '${this.input}'`;
     }
 }

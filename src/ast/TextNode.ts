@@ -2,7 +2,7 @@ import ASTNode from "./ASTNode";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {Err, Ok} from "../result";
 import {noneOf, oneOf, tag} from "../util_parsers/basic";
-import {alt, delimited, many0, map, preceded, value} from "../util_parsers/combinator";
+import {alt, delimited, many0, map, preceded, value, withError} from "../util_parsers/combinator";
 import Context from "./Context";
 
 export default class TextNode extends ASTNode {
@@ -14,9 +14,9 @@ export default class TextNode extends ASTNode {
         const parseResult = stringLiteral(input);
         if (parseResult.isErr()) {
             return new Err(new ParseError(
-                `text (${parseResult.unwrapErr().toString()})`,
+                `текст (${parseResult.unwrapErr().toString()})`,
                 input,
-                new CustomError("TextNode"),
+                new CustomError("Розбір текстового вузла"),
             ));
         }
         const [rest, n] = parseResult.unwrap();
@@ -46,6 +46,16 @@ const stringWithoutQuotes = many0(alt(
 ));
 
 const stringLiteral = map(
-    delimited(tag("\""), stringWithoutQuotes, tag("\"")),
+    delimited(
+        i => withError(
+            tag("\""),
+            new ParseError('"', i, new CustomError("Розбір початку текстового вузла")),
+        )(i),
+        stringWithoutQuotes,
+        i => withError(
+            tag("\""),
+            new ParseError('"', i, new CustomError("Розбір кінця текстового вузла")),
+        )(i),
+    ),
     (chars) => chars.join(""),
 );

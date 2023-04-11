@@ -45,7 +45,7 @@ describe("AST nodes", () => {
         test("failed to parse from `abc`", () => {
             const node = NumberNode.parse("abc", new Context(0, 0));
             expect(node).toStrictEqual(
-                new Err(new ParseError("number", "abc", new CustomError("NumberNode"))),
+                new Err(new ParseError("число", "abc", new CustomError("Розбір числового вузла"))),
             );
         });
     });
@@ -68,7 +68,7 @@ describe("AST nodes", () => {
         test("failed to parse from `abc`", () => {
             const node = LogicalNode.parse("abc", new Context(0, 0));
             expect(node).toStrictEqual(
-                new Err(new ParseError("logical", "abc", new CustomError("LogicalNode"))),
+                new Err(new ParseError('"так" або "ні"', "abc", new CustomError("Розбір логічного вузла"))),
             );
         });
     });
@@ -84,7 +84,7 @@ describe("AST nodes", () => {
         test("failed to parse from `abc`", () => {
             const node = EmptyNode.parse("abc", new Context(0, 0));
             expect(node).toStrictEqual(
-                new Err(new ParseError("пусто", "abc", new CustomError("EmptyNode"))),
+                new Err(new ParseError("пусто", "abc", new CustomError("Розбір вузла 'пусто'"))),
             );
         });
     });
@@ -157,9 +157,9 @@ describe("AST nodes", () => {
             const node = TextNode.parse("abc", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "text (ParseError(tag): Expected '\"' but got 'abc')",
+                    "текст (Помилка розбирача (Розбір початку текстового вузла): Очікувалося '\"', але отримали 'abc')",
                     "abc",
-                    new CustomError("TextNode"),
+                    new CustomError("Розбір текстового вузла"),
                 )),
             );
         });
@@ -168,9 +168,9 @@ describe("AST nodes", () => {
             const node = TextNode.parse("\"ab\nc\"", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "text (ParseError(tag): Expected '\"' but got '\nc\"')",
+                    "текст (Помилка розбирача (Розбір кінця текстового вузла): Очікувалося '\"', але отримали '\nc\"')",
                     "\"ab\nc\"",
-                    new CustomError("TextNode"),
+                    new CustomError("Розбір текстового вузла"),
                 )),
             );
         });
@@ -241,9 +241,9 @@ describe("AST nodes", () => {
             const node = ObjectEntryNode.parse("=", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "object entry (ParseError(alt): Expected 'one of the provided parsers' but got '=')",
+                    "входження об'єкту (Помилка розбирача (Розбір ключа входження об'єкту): Очікувалося 'ключ входження об'єкту', але отримали '=')",
                     "=",
-                    new CustomError("ObjectEntryNode"),
+                    new CustomError("Розбір входження об'єкту"),
                 )),
             );
         });
@@ -267,9 +267,9 @@ describe("AST nodes", () => {
             const node = ObjectEntryNode.parse("abc", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "object entry (ParseError(tag): Expected '=' but got '')",
+                    "входження об'єкту (Помилка розбирача (Розбір '=' між ключем і значенням): Очікувалося '=', але отримали '')",
                     "abc",
-                    new CustomError("ObjectEntryNode"),
+                    new CustomError("Розбір входження об'єкту"),
                 )),
             );
         });
@@ -278,9 +278,9 @@ describe("AST nodes", () => {
             const node = ObjectEntryNode.parse("ключ=значення", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "object entry (ParseError(alt): Expected 'one of the provided parsers' but got 'значення')",
+                    "входження об'єкту (Помилка розбирача (Розбір вузла синтаксичного дерева): Очікувалося 'щось з переліку: \"пусто\", \"так\", \"ні\", число, текст, об\'єкт, словник або список', але отримали 'значення')",
                     "ключ=значення",
-                    new CustomError("ObjectEntryNode"),
+                    new CustomError("Розбір входження об'єкту"),
                 )),
             );
         });
@@ -289,9 +289,9 @@ describe("AST nodes", () => {
             const node = ObjectEntryNode.parse(" ключ=значення", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "object entry (ParseError(alt): Expected 'one of the provided parsers' but got ' ключ=значення')",
+                    "входження об'єкту (Помилка розбирача (Розбір ключа входження об'єкту): Очікувалося 'ключ входження об'єкту', але отримали ' ключ=значення')",
                     " ключ=значення",
-                    new CustomError("ObjectEntryNode"),
+                    new CustomError("Розбір входження об'єкту"),
                 )),
             );
         });
@@ -446,9 +446,9 @@ describe("AST nodes", () => {
             );
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "object (ParseError(tag): Expected ')' but got '')",
+                    "об'єкт (Помилка розбирача (Розбір кінця тіла об'єкту): Очікувалося ')', але отримали '')",
                     "Людина(ім'я=\"Давид\", бути=так",
-                    new CustomError("ObjectNode"),
+                    new CustomError("Розбір об'єкту"),
                 )),
             );
         });

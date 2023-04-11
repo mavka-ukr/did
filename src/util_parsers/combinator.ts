@@ -58,6 +58,22 @@ export function tuple<T extends any[]>(...parsers: { [K in keyof T]: Parser<T[K]
     };
 }
 
+/**
+ * A combinator that applies a parser and returns the result if it succeeds,
+ * otherwise returns the provided error.
+ * @param parser The parser to apply
+ * @param err The error to return if the parser fails
+ */
+export function withError<T>(parser: Parser<T>, err: ParseError): Parser<T> {
+    return input => {
+        const result = parser(input);
+        if (result.isOk()) {
+            return result;
+        }
+
+        return new Err(err);
+    };
+}
 
 /**
  * A combinator that tries to apply a parser from the provided list
