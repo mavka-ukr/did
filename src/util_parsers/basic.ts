@@ -85,12 +85,12 @@ export function numeric1(input: string): IResult<string> {
 
 /**
  * A parser that matches a single character from the given string
- * @param chars the string of characters to match
+ * @param chars the string of characters to match. Is pasted into a regexp of format `^[${chars}]`
  * @returns {Parser<string>} the parser that matches a single character
  * from the given string of characters
  */
 export function oneOf(chars: string): Parser<string> {
-    const regexp = new RegExp(`^([${chars}])`);
+    const regexp = new RegExp(`^[${chars}]`);
     return (input: string) => {
         const match = input.match(regexp);
         if (match) {

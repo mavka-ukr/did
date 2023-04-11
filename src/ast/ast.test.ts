@@ -1,3 +1,4 @@
+import {parseASTNode} from "./composite_parsers";
 import Context from "./Context";
 import DictionaryEntryNode from "./DictionaryEntryNode";
 import DictionaryNode from "./DictionaryNode";
@@ -278,7 +279,7 @@ describe("AST nodes", () => {
             const node = ObjectEntryNode.parse("ключ=значення", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "входження об'єкту (Помилка розбирача (Розбір вузла синтаксичного дерева): Очікувалося 'щось з переліку: \"пусто\", \"так\", \"ні\", число, текст, об\'єкт, словник або список', але отримали 'значення')",
+                    "входження об'єкту (Помилка розбирача (Розбір вузла синтаксичного дерева): Очікувалося 'щось з переліку: \"пусто\", \"так\", \"ні\", число, текст, об\'єкт, словник або список', але отримали 'значе...')",
                     "ключ=значення",
                     new CustomError("Розбір входження об'єкту"),
                 )),
@@ -289,7 +290,7 @@ describe("AST nodes", () => {
             const node = ObjectEntryNode.parse(" ключ=значення", new Context(0, 0));
             expect(node).toStrictEqual(
                 new Err(new ParseError(
-                    "входження об'єкту (Помилка розбирача (Розбір ключа входження об'єкту): Очікувалося 'ключ входження об'єкту', але отримали ' ключ=значення')",
+                    "входження об'єкту (Помилка розбирача (Розбір ключа входження об'єкту): Очікувалося 'ключ входження об'єкту', але отримали ' ключ...')",
                     " ключ=значення",
                     new CustomError("Розбір входження об'єкту"),
                 )),

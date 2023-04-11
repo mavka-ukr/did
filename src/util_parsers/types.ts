@@ -43,17 +43,20 @@ export class CustomError {
 }
 
 export class ParseError {
+    public readonly inputStart: string;
+
     constructor(
         public readonly expected: string,
-        public readonly input: string,
+        input: string,
         public readonly kind?: ErrorKind,
     ) {
+        this.inputStart = input.slice(0, 5) + (input.length > 5 ? "..." : "");
     }
 
     toString(): string {
         const kind = this.kind
             ? ` (${this.kind})`
             : "";
-        return `Помилка розбирача${kind}: Очікувалося '${this.expected}', але отримали '${this.input}'`;
+        return `Помилка розбирача${kind}: Очікувалося '${this.expected}', але отримали '${this.inputStart}'`;
     }
 }

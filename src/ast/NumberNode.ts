@@ -27,9 +27,9 @@ export default class NumberNode extends ASTNode {
 function parseNumber(input: string): IResult<number> {
     return map(
         pair(
-            opt(tag("-")),
+            opt(tag('-')),
             alt(
-                map(recognize(tuple(numeric1, tag("."), numeric1)), Number.parseFloat),
+                map(recognize(tuple(numeric1, tag('.'), numeric1)), Number.parseFloat),
                 map(recognize(numeric1), Number.parseInt),
             ),
         ),

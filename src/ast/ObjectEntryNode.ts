@@ -2,7 +2,7 @@ import ASTNode from "./ASTNode";
 import {Err, Ok} from "../result";
 import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {alt, many0, map, recognize, tuple, withError} from "../util_parsers/combinator";
-import {alpha, alphaNumeric, tag} from "../util_parsers/basic";
+import {alpha, alphaNumeric, oneOf, tag} from "../util_parsers/basic";
 import {parseASTNode} from "./composite_parsers";
 import Context, {whitespaceOffset} from "./Context";
 
@@ -39,7 +39,7 @@ export function parseIdent(input: string): IResult<string> {
     return recognize(tuple(
         alt(tag("_"), alpha), // first char must be alpha or underscore
         alphaNumericOrUnderscore0, // rest of chars must be alphanumeric or underscore
-        many0(tuple(tag("'"), alpha, alphaNumericOrUnderscore0)), // optional apostrophes
+        many0(tuple(oneOf("'ʼ"), alpha, alphaNumericOrUnderscore0)), // optional apostrophes
     ))(input);
 }
 

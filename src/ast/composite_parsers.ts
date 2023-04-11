@@ -46,7 +46,7 @@ export function listOfEntries<T extends ASTNode>(
                 return new Ok([rest, [entries, newContext]]);
             }
             return new Err(new ParseError(
-                `Розбір елементу переліку ${entryResult.unwrapErr()}`,
+                `елемент переліку (${entryResult.unwrapErr()})`,
                 rest,
                 new CustomError("Розбір елементу переліку"),
             ));

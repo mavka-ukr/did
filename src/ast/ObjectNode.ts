@@ -43,7 +43,7 @@ function parseObject(input: string, context: Context): IResult<[string, ObjectEn
         return new Err(identResult.unwrapErr());
     }
     const [rest, ident] = identResult.unwrap();
-    const newContext = context.addColumns(input.length - rest.length);
+    const newContext = context.addColumns(ident.length);
     const openParenResult = withError(
         pair(tag("("), whitespaceOffset),
         new ParseError("(", rest, new CustomError("Розбір початку тіла об'єкту")),

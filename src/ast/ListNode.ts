@@ -15,9 +15,9 @@ export default class ListNode extends ASTNode {
         const parseResult = parseList(input, context);
         if (parseResult.isErr()) {
             return new Err(new ParseError(
-                `list (${parseResult.unwrapErr()})`,
+                `список вузлів (${parseResult.unwrapErr()})`,
                 input,
-                new CustomError("ListNode"),
+                new CustomError("Розбір списку вузлів"),
             ));
         }
         const [rest, [entries, newContext]] = parseResult.unwrap();

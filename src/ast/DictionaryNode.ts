@@ -15,7 +15,7 @@ export default class DictionaryNode extends ASTNode {
     static parse(input: string, context: Context): IResult<[DictionaryNode, Context]> {
         const parseResult = parseDictionary(input, context);
         if (parseResult.isErr()) {
-            return new Err(new ParseError("dictionary", input, new CustomError("DictionaryNode")));
+            return new Err(new ParseError("словник", input, new CustomError("Розбір словника")));
         }
         const [rest, [entries, newContext]] = parseResult.unwrap();
         return new Ok([rest, [new DictionaryNode(entries, context), newContext]]);
