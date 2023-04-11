@@ -165,6 +165,7 @@ export function recognize<T>(parser: Parser<T>): Parser<string> {
  * A combinator that applies the provided parser and returns its result on success,
  * or `undefined` on failure.
  * @param parser The parser to apply.
+ * @typedef T The type of the result of the input parser.
  * @returns {Parser<T | null>} A parser that returns the result of the input parser on success,
  * or `undefined` on failure.
  */
