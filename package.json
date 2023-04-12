@@ -5,7 +5,7 @@
   "description": "Did format parser.",
   "main": "src/main.js",
   "scripts": {
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js "
   },
   "repository": {
     "type": "git",
@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/mavka-ukr/did/issues"
   },
-  "homepage": "https://github.com/mavka-ukr/did#readme"
+  "homepage": "https://github.com/mavka-ukr/did#readme",
+  "devDependencies": {
+    "jest": "^29.5.0"
+  }
 }
