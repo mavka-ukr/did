@@ -1,10 +1,13 @@
-class ASTNode {}
-class NumberNode extends ASTNode {}
+import { Tokenizer } from "./Tokenizer.js";
+import Parser from "./Parser.js";
+import { ASTNode } from "./Nodes.js";
 
 /**
  * @param {string} code
  * @return {ASTNode}
  */
 export function parse(code) {
-    return new NumberNode(123);
+    const tokenizer = new Tokenizer(code);
+    const parser = new Parser(tokenizer.tokenize());
+    return parser.parseRoot();
 }
