@@ -1,6 +1,6 @@
 import {Err, Ok} from "../result";
 import {tag} from "../util_parsers/basic";
-import {alt, pair, withError} from "../util_parsers/combinator";
+import {alt, tuple, withError} from "../util_parsers/combinator";
 import {CustomError, IResult, ParseError, Parser} from "../util_parsers/types";
 import ASTNode from "./ASTNode";
 import Context, {whitespaceOffset} from "./Context";
@@ -55,13 +55,17 @@ export function listOfEntries<T extends ASTNode>(
         entries.push(entry);
         rest = rest2;
         newContext = newContext1;
-        const sepResult = pair(tag(","), whitespaceOffset)(rest);
+        const sepResult = tuple(whitespaceOffset, tag(","), whitespaceOffset)(rest);
         if (sepResult.isErr()) {
             break;
         }
-        const [rest3, [, offset]] = sepResult.unwrap();
+        const [rest3, [offest1, , offset2]] = sepResult.unwrap();
         rest = rest3;
-        newContext = newContext.addColumns(1).addRows(offset.rows).addColumns(offset.columns);
+        newContext = newContext
+            .addRows(offset1.rows)
+            .addColumns(offset1.columns + 1)
+            .addRows(offset.rows)
+            .addColumns(offset.columns);
     }
     return new Ok([rest, [entries, newContext]]);
 }
