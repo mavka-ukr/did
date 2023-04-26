@@ -1,7 +1,5 @@
-import {IResult, ParseError, Parser} from "./types";
 import {Err, Ok} from "../result";
-
-const tagParsers = new Map<string, Parser<string>>();
+import {IResult, ParseError, Parser} from "./types";
 
 /**
  * A parser that matches a string value.
@@ -11,18 +9,12 @@ const tagParsers = new Map<string, Parser<string>>();
  * this value and a rest of input on success.
  */
 export function tag(value: string): Parser<string> {
-    let parser = tagParsers.get(value);
-    if (parser) {
-        return parser;
-    }
-    parser = (input: string) => {
+    return (input: string) => {
         if (input.startsWith(value)) {
             return new Ok([input.slice(value.length), value]);
         }
         return new Err(new ParseError(value, input, "tag"));
     };
-    tagParsers.set(value, parser);
-    return parser;
 }
 
 /**

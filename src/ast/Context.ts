@@ -36,7 +36,7 @@ export default class Context {
     }
 }
 
-type Offset = { columns: number, rows: number };
+export type Offset = { columns: number, rows: number };
 
 function isDefined<T>(t: T | undefined): t is T {
     return t !== undefined;
