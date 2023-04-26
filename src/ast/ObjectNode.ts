@@ -1,11 +1,11 @@
-import ASTNode from "./ASTNode";
-import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {Err, Ok} from "../result";
-import {pair, withError} from "../util_parsers/combinator";
+import {withError} from "../util_parsers/combinator";
+import {CustomError, IResult, ParseError} from "../util_parsers/types";
+import ASTNode from "./ASTNode";
 import {listOfEntries} from "./composite_parsers";
-import Context, {whitespaceOffset} from "./Context";
-import ObjectEntryNode, {parseIdent} from "./ObjectEntryNode";
-import {tag} from "../util_parsers/basic";
+import Context from "./Context";
+import {DICTIONARY_END, DICTIONARY_START} from "./DictionaryNode";
+import ObjectEntryNode, {IDENT} from "./ObjectEntryNode";
 
 export default class ObjectNode extends ASTNode {
     constructor(
@@ -34,9 +34,10 @@ export default class ObjectNode extends ASTNode {
     }
 }
 
+
 function parseObject(input: string, context: Context): IResult<[string, ObjectEntryNode[], Context]> {
     const identResult = withError(
-        parseIdent,
+        IDENT,
         new ParseError("назва об'єкту", input, new CustomError("Розбір назви об'єкту")),
     )(input);
     if (identResult.isErr()) {
@@ -45,7 +46,7 @@ function parseObject(input: string, context: Context): IResult<[string, ObjectEn
     const [rest, ident] = identResult.unwrap();
     const newContext = context.addColumns(ident.length);
     const openParenResult = withError(
-        pair(tag("("), whitespaceOffset),
+        DICTIONARY_START,
         new ParseError("(", rest, new CustomError("Розбір початку тіла об'єкту")),
     )(rest);
     if (openParenResult.isErr()) {
@@ -60,7 +61,7 @@ function parseObject(input: string, context: Context): IResult<[string, ObjectEn
     }
     const [rest3, [entries, newContext3]] = listOfEntriesResult.unwrap();
     const closeParenResult = withError(
-        pair(whitespaceOffset, tag(")")),
+        DICTIONARY_END,
         new ParseError(")", rest3, new CustomError("Розбір кінця тіла об'єкту")),
     )(rest3);
     if (closeParenResult.isErr()) {

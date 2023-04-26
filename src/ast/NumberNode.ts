@@ -1,8 +1,8 @@
-import ASTNode from "./ASTNode";
-import {CustomError, IResult, ParseError} from "../util_parsers/types";
-import {recognize, pair, opt, alt, tuple, map} from "../util_parsers/combinator";
-import {numeric1, tag} from "../util_parsers/basic";
 import {Err, Ok} from "../result";
+import {numeric1, tag} from "../util_parsers/basic";
+import {alt, map, opt, pair, recognize, tuple} from "../util_parsers/combinator";
+import {CustomError, IResult, ParseError} from "../util_parsers/types";
+import ASTNode from "./ASTNode";
 import Context from "./Context";
 
 export default class NumberNode extends ASTNode {
@@ -11,7 +11,7 @@ export default class NumberNode extends ASTNode {
     }
 
     static parse(input: string, context: Context): IResult<[NumberNode, Context]> {
-        const parseResult = parseNumber(input);
+        const parseResult = NUMBER(input);
         if (parseResult.isErr()) {
             return new Err(new ParseError("число", input, new CustomError("Розбір числового вузла")));
         }
@@ -24,17 +24,15 @@ export default class NumberNode extends ASTNode {
     }
 }
 
-function parseNumber(input: string): IResult<number> {
-    return map(
-        pair(
-            opt(tag('-')),
-            alt(
-                map(recognize(tuple(numeric1, tag('.'), numeric1)), Number.parseFloat),
-                map(recognize(numeric1), Number.parseInt),
-            ),
+const NUMBER = map(
+    pair(
+        opt(tag('-')),
+        alt(
+            map(recognize(tuple(numeric1, tag('.'), numeric1)), Number.parseFloat),
+            map(recognize(numeric1), Number.parseInt),
         ),
-        ([sign, n]) => sign
-            ? -n
-            : n,
-    )(input);
-}
+    ),
+    ([sign, n]) => sign
+        ? -n
+        : n,
+);

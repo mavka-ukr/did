@@ -1,8 +1,8 @@
-import ASTNode from "./ASTNode";
-import {CustomError, IResult, ParseError} from "../util_parsers/types";
+import {Err, Ok} from "../result";
 import {tag} from "../util_parsers/basic";
 import {alt, value} from "../util_parsers/combinator";
-import {Err, Ok} from "../result";
+import {CustomError, IResult, ParseError} from "../util_parsers/types";
+import ASTNode from "./ASTNode";
 import Context from "./Context";
 
 export default class LogicalNode extends ASTNode {
@@ -11,7 +11,7 @@ export default class LogicalNode extends ASTNode {
     }
 
     static parse(input: string, context: Context): IResult<[LogicalNode, Context]> {
-        const parseResult = parseBool(input);
+        const parseResult = BOOL(input);
         if (parseResult.isErr()) {
             return new Err(new ParseError('"так" або "ні"', input, new CustomError("Розбір логічного вузла")));
         }
@@ -24,9 +24,7 @@ export default class LogicalNode extends ASTNode {
     }
 }
 
-function parseBool(input: string): IResult<boolean> {
-    return alt(
-        value(tag("так"), true),
-        value(tag("ні"), false),
-    )(input);
-}
+const BOOL = alt(
+    value(tag("так"), true),
+    value(tag("ні"), false),
+);

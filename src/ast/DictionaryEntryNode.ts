@@ -6,7 +6,7 @@ import ASTNode from "./ASTNode";
 import {parseASTNode} from "./composite_parsers";
 import Context, {whitespaceOffset} from "./Context";
 import NumberNode from "./NumberNode";
-import {parseIdent} from "./ObjectEntryNode";
+import {IDENT} from "./ObjectEntryNode";
 import TextNode from "./TextNode";
 
 export default class DictionaryEntryNode extends ASTNode {
@@ -36,11 +36,13 @@ export default class DictionaryEntryNode extends ASTNode {
     }
 }
 
+const ENTRY_KEY_VALUE_SEPARATOR = tuple(whitespaceOffset, tag("="), whitespaceOffset);
+
 function parseEntry(input: string, context: Context): IResult<[TextNode | NumberNode, ASTNode, Context]> {
     const keyResult = withError(
         alt(
             map(
-                parseIdent,
+                IDENT,
                 ident => [new TextNode(ident, context), context.addColumns(ident.length)],
             ) as Parser<[TextNode | NumberNode, Context]>,
             (i => TextNode.parse(i, context)) as Parser<[TextNode | NumberNode, Context]>,
@@ -58,7 +60,7 @@ function parseEntry(input: string, context: Context): IResult<[TextNode | Number
     let [rest, [key, newContext]] = keyResult.unwrap();
 
     const sepResult = withError(
-        tuple(whitespaceOffset, tag("="), whitespaceOffset),
+        ENTRY_KEY_VALUE_SEPARATOR,
         new ParseError(
             '=',
             rest,

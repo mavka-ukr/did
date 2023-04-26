@@ -1,8 +1,9 @@
-import ASTNode from "./ASTNode";
 import {Err, Ok} from "../result";
-import {CustomError, IResult, ParseError} from "../util_parsers/types";
+import {alpha, alphaNumeric, oneOf} from "../util_parsers/basic";
 import {alt, many0, map, recognize, tuple, withError} from "../util_parsers/combinator";
-import {alpha, alphaNumeric, oneOf, tag} from "../util_parsers/basic";
+import {CustomError, IResult, ParseError} from "../util_parsers/types";
+import ASTNode from "./ASTNode";
+import {EQUALS_TAG, UNDERSCORE_TAG} from "./common_parsers";
 import {parseASTNode} from "./composite_parsers";
 import Context, {whitespaceOffset} from "./Context";
 
@@ -35,31 +36,30 @@ export default class ObjectEntryNode extends ASTNode {
     }
 }
 
-export function parseIdent(input: string): IResult<string> {
-    return recognize(tuple(
-        alt(tag("_"), alpha), // first char must be alpha or underscore
-        alphaNumericOrUnderscore0, // rest of chars must be alphanumeric or underscore
-        many0(tuple(oneOf("'ʼ"), alpha, alphaNumericOrUnderscore0)), // optional apostrophes
-    ))(input);
-}
+const ALPHANUMERIC_OR_UNDERSCORE = many0(alt(alphaNumeric, UNDERSCORE_TAG));
+const APOSTROPHE = oneOf("'ʼ");
 
-function alphaNumericOrUnderscore0(input: string): IResult<string[]> {
-    return many0(alt(alphaNumeric, tag("_")))(input);
-}
+export const IDENT = recognize(tuple(
+    alt(UNDERSCORE_TAG, alpha), // first char must be alpha or underscore
+    ALPHANUMERIC_OR_UNDERSCORE, // rest of chars must be alphanumeric or underscore
+    many0(tuple(APOSTROPHE, alpha, ALPHANUMERIC_OR_UNDERSCORE)), // optional apostrophes
+));
+
+const KEY_AND_EQ = tuple(
+    i => withError(
+        IDENT,
+        new ParseError("ключ входження об'єкту", i, new CustomError("Розбір ключа входження об'єкту")),
+    )(i),
+    whitespaceOffset,
+    i => withError(
+        EQUALS_TAG,
+        new ParseError("=", i, new CustomError("Розбір '=' між ключем і значенням")),
+    )(i),
+    whitespaceOffset,
+);
 
 function parseObjectEntry(input: string, context: Context): IResult<[string, [ASTNode, Context]]> {
-    const keyAndEq = tuple(
-        i => withError(
-            parseIdent,
-            new ParseError("ключ входження об'єкту", i, new CustomError("Розбір ключа входження об'єкту")),
-        )(i),
-        whitespaceOffset,
-        i => withError(
-            tag("="),
-            new ParseError("=", i, new CustomError("Розбір '=' між ключем і значенням")),
-        )(i),
-        whitespaceOffset,
-    )(input);
+    const keyAndEq = KEY_AND_EQ(input);
     if (keyAndEq.isErr()) {
         return new Err(keyAndEq.unwrapErr());
     }

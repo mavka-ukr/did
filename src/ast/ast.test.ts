@@ -1,17 +1,16 @@
-import {parseASTNode} from "./composite_parsers";
+import {describe} from "@jest/globals";
+import {Err, Ok} from "../result";
+import {CustomError, ParseError} from "../util_parsers/types";
 import Context from "./Context";
 import DictionaryEntryNode from "./DictionaryEntryNode";
 import DictionaryNode from "./DictionaryNode";
-import NumberNode from "./NumberNode";
-import {Err, Ok} from "../result";
-import {describe} from "@jest/globals";
-import {CustomError, ParseError} from "../util_parsers/types";
-import LogicalNode from "./LogicalNode";
 import EmptyNode from "./EmptyNode";
-import TextNode from "./TextNode";
+import ListNode from "./ListNode";
+import LogicalNode from "./LogicalNode";
+import NumberNode from "./NumberNode";
 import ObjectEntryNode from "./ObjectEntryNode";
 import ObjectNode from "./ObjectNode";
-import ListNode from "./ListNode";
+import TextNode from "./TextNode";
 
 describe("AST nodes", () => {
     describe("NumberNode", () => {
@@ -664,6 +663,25 @@ describe("AST nodes", () => {
                             new Context(0, 0),
                         ),
                         new Context(0, 9),
+                    ],
+                ]),
+            );
+        });
+
+        test("parses from `[1\n, 1]`", () => {
+            const node = ListNode.parse("[1\n, 1]", new Context(0, 0));
+            expect(node).toStrictEqual(
+                new Ok([
+                    "",
+                    [
+                        new ListNode(
+                            [
+                                new NumberNode(1, new Context(0, 1)),
+                                new NumberNode(1, new Context(1, 2)),
+                            ],
+                            new Context(0, 0),
+                        ),
+                        new Context(1, 4),
                     ],
                 ]),
             );

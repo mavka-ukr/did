@@ -1,8 +1,8 @@
-import ASTNode from "./ASTNode";
-import {CustomError, IResult, ParseError} from "../util_parsers/types";
 import {Err, Ok} from "../result";
 import {noneOf, oneOf, tag} from "../util_parsers/basic";
 import {alt, delimited, many0, map, preceded, value, withError} from "../util_parsers/combinator";
+import {CustomError, IResult, ParseError} from "../util_parsers/types";
+import ASTNode from "./ASTNode";
 import Context from "./Context";
 
 export default class TextNode extends ASTNode {
@@ -28,10 +28,12 @@ export default class TextNode extends ASTNode {
     }
 }
 
-const escapedLineFeed = preceded(tag("\\"), tag("n"));
-const escapedCarriageReturn = preceded(tag("\\"), tag("r"));
+const BACKSLASH_TAG = tag("\\");
+
+const escapedLineFeed = preceded(BACKSLASH_TAG, tag("n"));
+const escapedCarriageReturn = preceded(BACKSLASH_TAG, tag("r"));
 const allowedChars = noneOf("\"\\n\\r\\\\");
-const escapedChar = preceded(tag("\\"), oneOf("\"t\\\\"));
+const escapedChar = preceded(BACKSLASH_TAG, oneOf("\"t\\\\"));
 const stringWithoutQuotes = many0(alt(
     value(escapedLineFeed, "\n"),
     value(escapedCarriageReturn, "\r"),
@@ -45,15 +47,17 @@ const stringWithoutQuotes = many0(alt(
     allowedChars,
 ));
 
+const DOUBLE_QUOTE = tag("\"");
+
 const stringLiteral = map(
     delimited(
         i => withError(
-            tag("\""),
+            DOUBLE_QUOTE,
             new ParseError('"', i, new CustomError("Розбір початку текстового вузла")),
         )(i),
         stringWithoutQuotes,
         i => withError(
-            tag("\""),
+            DOUBLE_QUOTE,
             new ParseError('"', i, new CustomError("Розбір кінця текстового вузла")),
         )(i),
     ),

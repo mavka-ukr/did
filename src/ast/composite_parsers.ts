@@ -1,9 +1,9 @@
 import {Err, Ok} from "../result";
-import {tag} from "../util_parsers/basic";
-import {alt, pair, withError} from "../util_parsers/combinator";
+import {alt, tuple, withError} from "../util_parsers/combinator";
 import {CustomError, IResult, ParseError, Parser} from "../util_parsers/types";
 import ASTNode from "./ASTNode";
-import Context, {whitespaceOffset} from "./Context";
+import {COMMA_TAG} from "./common_parsers";
+import Context, {Offset, whitespaceOffset} from "./Context";
 import DictionaryNode from "./DictionaryNode";
 import EmptyNode from "./EmptyNode";
 import ListNode from "./ListNode";
@@ -31,14 +31,23 @@ export function parseASTNode(input: string, context: Context): IResult<[ASTNode,
     )(input);
 }
 
+export const SEPARATOR_PARSER = tuple(whitespaceOffset, COMMA_TAG, whitespaceOffset);
+
 export function listOfEntries<T extends ASTNode>(
     input: string,
     context: Context,
     entryParser: (input: string, context: Context) => IResult<[T, Context]>,
 ): IResult<[T[], Context]> {
     const entries: T[] = [];
+
     let rest = input;
     let newContext = context;
+
+    let entry: T;
+
+    let wsOffset1: Offset;
+    let wsOffset2: Offset;
+
     while (true) {
         const entryResult = entryParser(rest, newContext);
         if (entryResult.isErr()) {
@@ -51,17 +60,18 @@ export function listOfEntries<T extends ASTNode>(
                 new CustomError("Розбір елементу переліку"),
             ));
         }
-        const [rest2, [entry, newContext1]] = entryResult.unwrap();
+        [rest, [entry, newContext]] = entryResult.unwrap();
         entries.push(entry);
-        rest = rest2;
-        newContext = newContext1;
-        const sepResult = pair(tag(","), whitespaceOffset)(rest);
+        const sepResult = SEPARATOR_PARSER(rest);
         if (sepResult.isErr()) {
             break;
         }
-        const [rest3, [, offset]] = sepResult.unwrap();
-        rest = rest3;
-        newContext = newContext.addColumns(1).addRows(offset.rows).addColumns(offset.columns);
+        [rest, [wsOffset1, , wsOffset2]] = sepResult.unwrap();
+        newContext = newContext
+            .addRows(wsOffset1.rows)
+            .addColumns(wsOffset1.columns + 1)
+            .addRows(wsOffset2.rows)
+            .addColumns(wsOffset2.columns);
     }
     return new Ok([rest, [entries, newContext]]);
 }
