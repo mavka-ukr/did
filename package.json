@@ -1,7 +1,7 @@
 {
   "name": "mavka-did",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Did format parser.",
   "main": "src/main.js",
   "scripts": {
@@ -14,10 +14,13 @@
   "keywords": [
     "mavka"
   ],
-  "author": "kohutd",
+  "author": "mavka",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mavka-ukr/did/issues"
   },
-  "homepage": "https://github.com/mavka-ukr/did#readme"
+  "homepage": "https://github.com/mavka-ukr/did#readme",
+  "devDependencies": {
+    "prettier": "2.8.8"
+  }
 }

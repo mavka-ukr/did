@@ -22,8 +22,8 @@ export class NumberNode extends ASTNode {
 export class TextNode extends ASTNode {
   constructor(value, line, column, char) {
     super(line, column, char);
-    this.value = value
-  } 
+    this.value = value;
+  }
 }
 
 // Logical (Boolean) node, contains true for "так" and false for "ні" as value
@@ -106,7 +106,8 @@ export function parse(str) {
     let initialLine = line;
     let starting_i = i;
     if (str[i] === "(") {
-      i++; column++;
+      i++;
+      column++;
       skipWhitespace();
 
       const result = [];
@@ -126,7 +127,7 @@ export function parse(str) {
           parseText() ??
           parseNumber();
         if (key === undefined) {
-          key=parseKey()
+          key = parseKey();
           if (key === undefined) {
             expectDictionaryKey();
           }
@@ -134,13 +135,14 @@ export function parse(str) {
         skipWhitespace();
         eatEqualitySign();
         const value = parseValue();
-        result.push(new DictionaryEntryNode(key, value, [dn_sline, line], [dn_scolumn, column], [dn_si, i]))
+        result.push(new DictionaryEntryNode(key, value, [dn_sline, line], [dn_scolumn, column], [dn_si, i]));
         initial = false;
       }
       expectNotEndOfInput(")");
 
       // move to the next character of ')'
-      i++; column++;
+      i++;
+      column++;
 
       return new DictionaryNode(result, [initialLine, line], [initialColumn, column], [starting_i, i]);
     }
@@ -152,7 +154,8 @@ export function parse(str) {
     let initialLine = line;
     let starting_i = i;
     if (str[i] === "[") {
-      i++; column++;
+      i++;
+      column++;
       skipWhitespace();
 
       const result = [];
@@ -165,12 +168,13 @@ export function parse(str) {
         result.push(value);
         initial = false;
       }
-        expectNotEndOfInput("]");
+      expectNotEndOfInput("]");
 
-        // move to the next character of ']'
-        i++; column++;
+      // move to the next character of ']'
+      i++;
+      column++;
 
-        return new ListNode(result, [initialLine, line], [initialColumn, column], [starting_i, i]);
+      return new ListNode(result, [initialLine, line], [initialColumn, column], [starting_i, i]);
     }
   }
 
@@ -185,9 +189,9 @@ export function parse(str) {
       parseDictionary() ??
       parseList() ??
       parseObject() ??
-      parseKeyword("так", new LogicalNode(true, [line, line], [initialColumn, initialColumn+3], [starting_i, starting_i+3])) ??
-      parseKeyword("ні", new LogicalNode(false, [line, line], [initialColumn, initialColumn+2], [starting_i, starting_i+2])) ??
-      parseKeyword("пусто", new EmptyNode([line, line], [initialColumn, initialColumn+5], [starting_i, starting_i+5]));
+      parseKeyword("так", new LogicalNode(true, [line, line], [initialColumn, initialColumn + 3], [starting_i, starting_i + 3])) ??
+      parseKeyword("ні", new LogicalNode(false, [line, line], [initialColumn, initialColumn + 2], [starting_i, starting_i + 2])) ??
+      parseKeyword("пусто", new EmptyNode([line, line], [initialColumn, initialColumn + 5], [starting_i, starting_i + 5]));
     skipWhitespace();
     return value;
   }
@@ -198,12 +202,14 @@ export function parse(str) {
     let initialColumn = column;
     let initialLine = line;
     let starting_i = i;
-    while (i < str.length && str[i] !== '=' && /^[a-zA-Zа-яА-ЯіІїЇʼ'єЄґҐ_0-9]+$/.test(str[i])) {
+    while (i < str.length && str[i] !== "=" && /^[a-zA-Zа-яА-ЯіІїЇʼ'єЄґҐ_0-9]+$/.test(str[i])) {
       objectName += str[i];
-      i++; column++;
+      i++;
+      column++;
     }
     if (str[i] === "(") {
-      i++; column++;
+      i++;
+      column++;
       skipWhitespace();
 
       const result = [];
@@ -226,17 +232,20 @@ export function parse(str) {
         skipWhitespace();
         eatEqualitySign();
         const value = parseValue();
-        result.push(new ObjectEntryNode(key, value, [on_sline, line], [on_scolumn, column], [on_si, i]))
+        result.push(new ObjectEntryNode(key, value, [on_sline, line], [on_scolumn, column], [on_si, i]));
         initial = false;
       }
       expectNotEndOfInput(")");
 
       // move to the next character of ')'
-      i++; column++;
+      i++;
+      column++;
 
       return new ObjectNode(objectName, result, [initialLine, line], [initialColumn, column], [starting_i, i]);
     } else {
-      line = initialLine; column = initialColumn; i = starting_i; 
+      line = initialLine;
+      column = initialColumn;
+      i = starting_i;
     }
   }
 
@@ -244,11 +253,12 @@ export function parse(str) {
   // what to return when the keyword is encountered
   function parseKeyword(name, value) {
     if (str.slice(i, i + name.length) === name) {
-      i += name.length; column += name.length;
+      i += name.length;
+      column += name.length;
       return value;
     }
   }
-  
+
   // skipping any number of whitespaces and some other characters, like newline
   function skipWhitespace() {
     while (
@@ -256,26 +266,29 @@ export function parse(str) {
       str[i] === "\n" ||
       str[i] === "\t" ||
       str[i] === "\r"
-    ) {
+      ) {
       if (str[i] === "\n") {
-        line ++; column = 0;
+        line++;
+        column = 0;
       }
-      i++; column++;
+      i++;
+      column++;
     }
   }
 
   // parsing text, return nothing if not a text (not between double quotes)
   function parseText() {
-    if (str[i] === '"') {
-      i++; column++;
+    if (str[i] === "\"") {
+      i++;
+      column++;
       let initialColumn = column;
       let starting_i = i;
       let result = "";
-      while (i < str.length && str[i] !== '"') {
+      while (i < str.length && str[i] !== "\"") {
         if (str[i] === "\\") { // if character is "\", we are expecting an escape-sequence
           const char = str[i + 1];
           if (
-            char === '"' ||
+            char === "\"" ||
             char === "\\" ||
             char === "/" ||
             char === "b" ||
@@ -285,7 +298,8 @@ export function parse(str) {
             char === "t"
           ) {
             result += char;
-            i++; column++;
+            i++;
+            column++;
           } else if (char === "u") {
             if (
               isHexadecimal(str[i + 2]) &&
@@ -307,11 +321,13 @@ export function parse(str) {
         } else {
           result += str[i];
         }
-        i++; column++;
+        i++;
+        column++;
       }
-      expectNotEndOfInput('"');
-      i++; column++;
-      return new TextNode(result, [line, line], [initialColumn, column-1], [starting_i, i-1]); // minus one because of the closing double quote
+      expectNotEndOfInput("\"");
+      i++;
+      column++;
+      return new TextNode(result, [line, line], [initialColumn, column - 1], [starting_i, i - 1]); // minus one because of the closing double quote
     }
   }
 
@@ -320,14 +336,19 @@ export function parse(str) {
     let result = "";
     let initialColumn = column;
     let starting_i = i;
-    while (i < str.length && str[i] !== '=' && /^[a-zA-Zа-яА-ЯіІїЇʼ'єЄґҐ_0-9]+$/.test(str[i])) {
+    while (i < str.length && str[i] !== "=" && /^[a-zA-Zа-яА-ЯіІїЇʼ'єЄґҐ_0-9]+$/.test(str[i])) {
       result += str[i];
-      i++; column++;
+      i++;
+      column++;
     }
     skipWhitespace();
     expectCharacter("=");
-    if (/^[1-9ʼ']+$/.test(str[starting_i])) {keyStartsWithWrongChar(result)}
-    if (result !== "") { return new TextNode(result, [line, line], [initialColumn, column], [starting_i, i]); }
+    if (/^[1-9ʼ']+$/.test(str[starting_i])) {
+      keyStartsWithWrongChar(result);
+    }
+    if (result !== "") {
+      return new TextNode(result, [line, line], [initialColumn, column], [starting_i, i]);
+    }
   }
 
   // checks if given charcter can be in hexadecimal number
@@ -344,23 +365,29 @@ export function parse(str) {
     let initialColumn = column;
     let starting_i = i;
     if (str[i] === "-") {
-      i++; column++;
+      i++;
+      column++;
       expectDigit(str.slice(start, i));
     }
     if (str[i] === "0") {
-      i++; column++;
+      i++;
+      column++;
     } else if (str[i] >= "1" && str[i] <= "9") {
-      i++; column++;
+      i++;
+      column++;
       while (str[i] >= "0" && str[i] <= "9") {
-        i++; column++;
+        i++;
+        column++;
       }
     }
 
     if (str[i] === ".") {
-      i++; column++;
+      i++;
+      column++;
       expectDigit(str.slice(start, i));
       while (str[i] >= "0" && str[i] <= "9") {
-        i++; column++;
+        i++;
+        column++;
       }
     }
     if (i > start) {
@@ -371,13 +398,15 @@ export function parse(str) {
   // ingore comma, but expect it
   function eatComma() {
     expectCharacter(",");
-    i++; column++;
+    i++;
+    column++;
   }
 
   // ignore equality sign =, but expect it
   function eatEqualitySign() {
     expectCharacter("=");
-    i++; column++;
+    i++;
+    column++;
   }
 
   // error handling
@@ -450,7 +479,7 @@ export function parse(str) {
     throw new Error("Очікується escape-юнікод");
   }
 
-  function keyStartsWithWrongChar(key) { 
+  function keyStartsWithWrongChar(key) {
     printCodeSnippet(`Ключ об'єкту не може починатися з цифри або деяких інших символів таких як апостроф
   
   Наприклад:

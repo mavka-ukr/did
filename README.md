@@ -29,5 +29,4 @@ const code = `
 const ast = parse(code);
 
 console.log(ast);
-
 ```
