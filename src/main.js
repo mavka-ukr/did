@@ -88,16 +88,33 @@ export class ObjectEntryNode extends ASTNode {
   }
 }
 
+// Parser error class, "info" property can be undefined, or contain one of the folowing: offending text, expected character, text so far.
+export class ParserError extends Error {
+  constructor(message, type, line, column, char, info) {
+    super(message);
+    this.name = "ParserError";
+    this.type = type;
+    this.line = line;
+    this.column = column;
+    this.char = char;
+    this.info = info;
+  }
+}
+
 // Main function parse(), accepts a ДІД string
 export function parse(str) {
   let i = 0;
   let line = 1;
   let column = 0;
+  let initialColumn = column;
+  let initialLine = line;
+  let starting_i = i;
+
 
   // parsing given data as any other value, that way parser works for any root data type
   // expecting an end of input right after main object
   const value = parseValue();
-  expectEndOfInput();
+  expectEndOfInput([initialLine, line], [initialColumn, column], [starting_i, i]);
   return value;
 
   // function for parsing dictionary
@@ -117,7 +134,7 @@ export function parse(str) {
       // we take the path of key -> whitespace -> '=' -> whitespace -> value -> ...
       while (i < str.length && str[i] !== ")") {
         if (!initial) {
-          eatComma();
+          eatComma([initialLine, line], [initialColumn, column], [starting_i, i]);
           skipWhitespace();
         }
         let dn_scolumn = column;
@@ -129,16 +146,16 @@ export function parse(str) {
         if (key === undefined) {
           key = parseKey();
           if (key === undefined) {
-            expectDictionaryKey();
+            expectDictionaryKey([initialLine, line], [initialColumn, column], [starting_i, i]);
           }
         }
         skipWhitespace();
-        eatEqualitySign();
+        eatEqualitySign([initialLine, line], [initialColumn, column], [starting_i, i]);
         const value = parseValue();
         result.push(new DictionaryEntryNode(key, value, [dn_sline, line], [dn_scolumn, column], [dn_si, i]));
         initial = false;
       }
-      expectNotEndOfInput(")");
+      expectNotEndOfInput(")", [initialLine, line], [initialColumn, column], [starting_i, i]);
 
       // move to the next character of ')'
       i++;
@@ -162,13 +179,13 @@ export function parse(str) {
       let initial = true;
       while (i < str.length && str[i] !== "]") {
         if (!initial) {
-          eatComma();
+          eatComma([initialLine, line], [initialColumn, column], [starting_i, i]);
         }
         const value = parseValue();
         result.push(value);
         initial = false;
       }
-      expectNotEndOfInput("]");
+      expectNotEndOfInput("]", [initialLine, line], [initialColumn, column], [starting_i, i]);
 
       // move to the next character of ']'
       i++;
@@ -219,7 +236,7 @@ export function parse(str) {
       // we take the path of key -> whitespace -> '=' -> whitespace -> value -> ...
       while (i < str.length && str[i] !== ")") {
         if (!initial) {
-          eatComma();
+          eatComma([initialLine, line], [initialColumn, column], [starting_i, i]);
           skipWhitespace();
         }
         let on_scolumn = column;
@@ -227,15 +244,15 @@ export function parse(str) {
         let on_si = i;
         const key = parseKey();
         if (key === undefined) {
-          expectObjectKey();
+          expectObjectKey([initialLine, line], [initialColumn, column], [starting_i, i]);
         }
         skipWhitespace();
-        eatEqualitySign();
+        eatEqualitySign([initialLine, line], [initialColumn, column], [starting_i, i]);
         const value = parseValue();
         result.push(new ObjectEntryNode(key, value, [on_sline, line], [on_scolumn, column], [on_si, i]));
         initial = false;
       }
-      expectNotEndOfInput(")");
+      expectNotEndOfInput(")", [initialLine, line], [initialColumn, column], [starting_i, i]);
 
       // move to the next character of ')'
       i++;
@@ -313,10 +330,10 @@ export function parse(str) {
               i += 5;
             } else {
               i += 2;
-              expectEscapeUnicode(result);
+              expectEscapeUnicode(result, [line, line], [initialColumn, column - 1], [starting_i, i - 1]);
             }
           } else {
-            expectEscapeCharacter(result);
+            expectEscapeCharacter(result, [line, line], [initialColumn, column - 1], [starting_i, i - 1]);
           }
         } else {
           result += str[i];
@@ -324,7 +341,7 @@ export function parse(str) {
         i++;
         column++;
       }
-      expectNotEndOfInput("\"");
+      expectNotEndOfInput("\"", [line, line], [initialColumn, column - 1], [starting_i, i - 1]);
       i++;
       column++;
       return new TextNode(result, [line, line], [initialColumn, column - 1], [starting_i, i - 1]); // minus one because of the closing double quote
@@ -342,9 +359,9 @@ export function parse(str) {
       column++;
     }
     skipWhitespace();
-    expectCharacter("=");
+    expectCharacter("=", [line, line], [initialColumn, column], [starting_i, i]);
     if (/^[1-9ʼ']+$/.test(str[starting_i])) {
-      keyStartsWithWrongChar(result);
+      keyStartsWithWrongChar(result, [line, line], [initialColumn, column], [starting_i, i]);
     }
     if (result !== "") {
       return new TextNode(result, [line, line], [initialColumn, column], [starting_i, i]);
@@ -367,7 +384,7 @@ export function parse(str) {
     if (str[i] === "-") {
       i++;
       column++;
-      expectDigit(str.slice(start, i));
+      expectDigit(str.slice(start, i), [line, line], [initialColumn, column], [starting_i, i]);
     }
     if (str[i] === "0") {
       i++;
@@ -384,7 +401,7 @@ export function parse(str) {
     if (str[i] === ".") {
       i++;
       column++;
-      expectDigit(str.slice(start, i));
+      expectDigit(str.slice(start, i), [line, line], [initialColumn, column], [starting_i, i]);
       while (str[i] >= "0" && str[i] <= "9") {
         i++;
         column++;
@@ -396,96 +413,96 @@ export function parse(str) {
   }
 
   // ingore comma, but expect it
-  function eatComma() {
-    expectCharacter(",");
+  function eatComma(line, column, char) {
+    expectCharacter(",", line, column, char);
     i++;
     column++;
   }
 
   // ignore equality sign =, but expect it
-  function eatEqualitySign() {
-    expectCharacter("=");
+  function eatEqualitySign(line, column, char) {
+    expectCharacter("=", line, column, char);
     i++;
     column++;
   }
 
   // error handling
-  function expectNotEndOfInput(expected) {
+  function expectNotEndOfInput(expected, line, column, char) {
     if (i === str.length) {
       printCodeSnippet(`Тут очікується \`${expected}\``);
-      throw new Error("Неочікуваний кінець вводу");
+      throw new ParserError("Неочікуваний кінець вводу", "unexpectedEOF", line, column, char, expected);
     }
   }
 
-  function expectEndOfInput() {
+  function expectEndOfInput(line, column, char) {
     if (i < str.length) {
       printCodeSnippet("Тут очікувався кінець");
-      throw new Error("Очікується кінець вводу");
+      throw new ParserError("Очікується кінець вводу", "expectedEOF", line, column, char);
     }
   }
 
-  function expectDictionaryKey() {
+  function expectDictionaryKey(line, column, char) {
     printCodeSnippet(`Тут очікується ключ словнику
   
   Наприклад
   ( ім'я = "Давид" )
     ^^^^^`);
-    throw new Error("Очікується ключ");
+    throw new ParserError("Очікується ключ", "expectedDictionaryKey", line, column, char);
   }
 
-  function expectObjectKey() {
+  function expectObjectKey(line, column, char) {
     printCodeSnippet(`Тут очікується ключ об'єкту
   
   Наприклад
   ( ім'я = "Давид" )
     ^^^^^`);
-    throw new Error("Очікується ключ");
+    throw new ParserError("Очікується ключ", "expectedObjectKey", line, column, char);
   }
 
-  function expectCharacter(expected) {
+  function expectCharacter(expected, line, column, char) {
     if (str[i] !== expected) {
       printCodeSnippet(`Тут очікується \`${expected}\``);
-      throw new Error("Неочікуваний токен");
+      throw new ParserError("Неочікуваний токен", "unexpectedToken", line, column, char, expected);
     }
   }
 
-  function expectDigit(numSoFar) {
+  function expectDigit(numSoFar, line, column, char) {
     if (!(str[i] >= "0" && str[i] <= "9")) {
       printCodeSnippet(`Тут очікується число
   
   Наприклад:
   ${numSoFar}5
   ${" ".repeat(numSoFar.length)}^`);
-      throw new Error("Очікується число");
+      throw new ParserError("Очікується число", "expectedNumber", line, column, char, numSoFar);
     }
   }
 
-  function expectEscapeCharacter(strSoFar) {
+  function expectEscapeCharacter(strSoFar, line, column, char) {
     printCodeSnippet(`Очікується escape-послідовність
   
   Наприклад:
   "${strSoFar}\\n"
   ${" ".repeat(strSoFar.length + 1)}^^
   Можливі escape-послідовності: \\", \\\\, \\/, \\b, \\f, \\n, \\r, \\t, \\u`);
-    throw new Error("Очікується символ escape-послідовності");
+    throw new ParserError("Очікується символ escape-послідовності", "expectedEscapeCharacter", line, column, char, strSoFar);
   }
 
-  function expectEscapeUnicode(strSoFar) {
+  function expectEscapeUnicode(strSoFar, line, column, char) {
     printCodeSnippet(`Очікується escape-юнінкод
   
   Наприклад:
   "${strSoFar}\\u0123"
   ${" ".repeat(strSoFar.length + 1)}^^^^^^`);
-    throw new Error("Очікується escape-юнікод");
+    throw new ParserError("Очікується escape-юнікод", "expectedEscapeUnicode", line, column, char, strSoFar);
   }
 
-  function keyStartsWithWrongChar(key) {
+  function keyStartsWithWrongChar(key, line, column, char) {
     printCodeSnippet(`Ключ об'єкту не може починатися з цифри або деяких інших символів таких як апостроф
   
   Наприклад:
   а${key}
   ${" ".repeat(key.length + 1)}^^^^^^`);
-    throw new Error("Ключ починається з забороненого символу");
+    throw new ParserError("Ключ починається з забороненого символу", "invalidKey", line, column, char, key);
   }
 
   // printing error message with a part of code

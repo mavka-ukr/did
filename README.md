@@ -30,3 +30,11 @@ const ast = parse(code);
 
 console.log(ast);
 ```
+
+## Тести
+
+Запуск тестів, використовується [Mocha](https://mochajs.org)
+
+```bash
+npm test
+```

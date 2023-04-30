@@ -1,7 +1,7 @@
 {
   "name": "mavka-did",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Did format parser.",
   "main": "src/main.js",
   "scripts": {
@@ -14,7 +14,7 @@
   "keywords": [
     "mavka"
   ],
-  "author": "mavka",
+  "author": "Artemii Kravchuk <ArtemiyKra@gmail.com> (https://github.com/ArtemiiKravchuk)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mavka-ukr/did/issues"
